@@ -153,14 +153,13 @@
     }
 
     .input-line {
-      min-height: 58px;
+      min-height: 66px;
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 2px;
-      position: relative;
-      top: -16px;
-      margin-bottom: -16px;
+      padding-top: 14px;
+      padding-bottom: 8px;
       color: var(--ink);
       font-size: clamp(31px, 7svh, 49px);
       font-weight: 700;
@@ -191,10 +190,11 @@
     }
 
     .copy-row.hidden {
-      min-height: 0;
-      opacity: 0;
-      pointer-events: none;
-      margin-top: -42px;
+      display: none;
+    }
+
+    .copy-row:not(.hidden) {
+      margin-bottom: 8px;
     }
 
     .keypad {
@@ -240,9 +240,17 @@
       grid-column: 3;
     }
 
+    .copy {
+      font-weight: 500;
+    }
+
     .copy-row button {
       height: 42px;
       border-radius: 13px;
+    }
+
+    button[data-dot] {
+      padding-bottom: 14px;
     }
 
     .backspace,
@@ -346,9 +354,9 @@
       <div class="tape" id="tape">
         <div class="empty" id="empty">按「=」後結果直接顯示，紀錄留在這裡</div>
       </div>
-      <div class="divider"></div>
       <div class="copy-row hidden" id="copyRow"></div>
       <div class="input-line" id="display"><span class="cursor"></span></div>
+      <div class="divider"></div>
     </section>
 
     <section class="keypad" aria-label="計算機按鍵">
