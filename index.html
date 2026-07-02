@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="小蘋果計算機">
+  <meta name="theme-color" content="#ead9c4">
+  <title>小蘋果計算機 v2</title>
+  <style>
+    :root {
+      --bg: #fbf6ef;
+      --panel: #e8d9c8;
+      --panel-soft: #f0dfc8;
+      --line: #c4a06c;
+      --ink: #3c2815;
+      --muted: #9b8066;
+      --cream: #fff9f2;
+      --gold: #cda06b;
+      --green: #a8b99d;
+      --green-dark: #28442c;
+      --red: #b95243;
+      --orange: #be735c;
+      --brown: #8c5d35;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--panel);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", "PingFang TC", sans-serif;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: max(20px, env(safe-area-inset-top)) 18px max(16px, env(safe-area-inset-bottom));
+    }
+
+    .calculator {
+      width: min(100%, 430px);
+      min-height: calc(100svh - max(26px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    header {
+      display: none;
+      align-items: baseline;
+      gap: 10px;
+      padding-left: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 800;
+      color: #96613c;
+    }
+
+    .version {
+      font-size: 20px;
+      font-weight: 800;
+      color: #9b8066;
+    }
+
+    .screen {
+      height: clamp(285px, 32svh, 308px);
+      border: 3px solid var(--line);
+      border-radius: 26px;
+      background: var(--panel-soft);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 24px 19px;
+      overflow: hidden;
+    }
+
+    .tape {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 4px 0 18px;
+      scrollbar-width: none;
+    }
+
+    .tape::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .empty {
+      margin: auto;
+      text-align: center;
+      color: var(--muted);
+      font-size: clamp(19px, 3.1svh, 27px);
+      font-weight: 800;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+
+    .entry {
+      border-bottom: 1px solid rgba(128, 102, 78, .18);
+      padding: 0 0 10px;
+      text-align: right;
+    }
+
+    .entry .expr {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .entry .answer {
+      color: var(--ink);
+      font-size: 27px;
+      font-weight: 800;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .entry .copied {
+      color: #8c6947;
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 18px;
+    }
+
+    .divider {
+      height: 2px;
+      background: #bfa06b;
+      flex: 0 0 auto;
+      opacity: .9;
+    }
+
+    .input-line {
+      min-height: 58px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 2px;
+      color: var(--ink);
+      font-size: clamp(31px, 7svh, 49px);
+      font-weight: 700;
+      line-height: 1.05;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .cursor {
+      width: 4px;
+      height: .98em;
+      background: var(--ink);
+      display: inline-block;
+      margin-left: 4px;
+      animation: blink 1.05s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .copy-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      min-height: 42px;
+      transition: min-height .18s ease, opacity .18s ease;
+    }
+
+    .copy-row.hidden {
+      min-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      margin-top: -42px;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      min-width: 0;
+      height: clamp(70px, 8.2svh, 78px);
+      border-radius: 18px;
+      color: var(--ink);
+      background: var(--cream);
+      box-shadow: none;
+      font: inherit;
+      font-size: clamp(34px, 5.6svh, 48px);
+      font-weight: 800;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+
+    .ans,
+    .copy {
+      background: var(--gold);
+      color: #fff;
+      font-size: clamp(22px, 3.1svh, 27px);
+      white-space: nowrap;
+    }
+
+    .copy.single {
+      grid-column: 3;
+    }
+
+    .copy-row button {
+      height: 42px;
+      border-radius: 13px;
+    }
+
+    .backspace,
+    .paren {
+      background: var(--green);
+      color: var(--green-dark);
+    }
+
+    .backspace {
+      font-size: clamp(31px, 4.6svh, 45px);
+    }
+
+    .placeholder {
+      background: rgba(255, 250, 244, .22);
+      box-shadow: none;
+      pointer-events: none;
+    }
+
+    .clear {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .op {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    .equals {
+      background: var(--brown);
+      color: #fff;
+    }
+
+    .notice {
+      min-height: 19px;
+      color: #8f5f3c;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 390px) {
+      body {
+        padding-inline: 10px;
+      }
+
+      .calculator {
+        padding: 28px 24px 26px;
+        border-radius: 27px;
+        gap: 14px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .version {
+        font-size: 18px;
+      }
+
+      .screen {
+        padding-inline: 20px;
+        height: clamp(270px, 36svh, 410px);
+      }
+
+      .keypad {
+        gap: 12px;
+      }
+
+      button {
+        border-radius: 16px;
+      }
+    }
+
+    @media (max-height: 780px) {
+      .calculator {
+        padding-top: 24px;
+        padding-bottom: 22px;
+        gap: 12px;
+      }
+
+      .screen {
+        height: 234px;
+      }
+
+      button {
+        height: 64px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator" aria-label="小蘋果計算機">
+    <header>
+      <h1>小蘋果計算機</h1>
+      <span class="version">v2</span>
+    </header>
+
+    <section class="screen" aria-live="polite">
+      <div class="tape" id="tape">
+        <div class="empty" id="empty">按「=」後結果直接顯示，紀錄留在這裡</div>
+      </div>
+      <div class="divider"></div>
+      <div class="copy-row hidden" id="copyRow"></div>
+      <div class="input-line" id="display"><span class="cursor"></span></div>
+    </section>
+
+    <section class="keypad" aria-label="計算機按鍵">
+      <button class="ans" data-ans="round0">⌊ANS⌋</button>
+      <button class="ans" data-ans="round2">ANS</button>
+      <button class="ans" data-ans="ceil">ANS〜</button>
+      <button class="backspace" id="backspace" aria-label="刪除">⌫</button>
+
+      <button class="paren" id="paren">( )</button>
+      <button class="placeholder" aria-hidden="true" tabindex="-1"></button>
+      <button class="clear" id="clear">AC</button>
+      <button class="op" data-op="÷">÷</button>
+
+      <button data-num="7">7</button>
+      <button data-num="8">8</button>
+      <button data-num="9">9</button>
+      <button class="op" data-op="×">×</button>
+
+      <button data-num="4">4</button>
+      <button data-num="5">5</button>
+      <button data-num="6">6</button>
+      <button class="op" data-op="−">−</button>
+
+      <button data-num="1">1</button>
+      <button data-num="2">2</button>
+      <button data-num="3">3</button>
+      <button class="op" data-op="+">+</button>
+
+      <button data-num="00">00</button>
+      <button data-num="0">0</button>
+      <button data-dot=".">.</button>
+      <button class="equals" id="equals">=</button>
+    </section>
+    <div class="notice" id="notice"></div>
+  </main>
+
+  <script>
+    const display = document.getElementById("display");
+    const tape = document.getElementById("tape");
+    const empty = document.getElementById("empty");
+    const copyRow = document.getElementById("copyRow");
+    const notice = document.getElementById("notice");
+    const operators = new Set(["+", "−", "×", "÷"]);
+
+    let expression = "";
+    let lastAnswer = null;
+    let clearOnNextNumber = false;
+    let deleteTimer = null;
+    let noticeTimer = null;
+
+    function render() {
+      const text = expression || "";
+      display.innerHTML = "";
+      if (text) {
+        display.append(document.createTextNode(text));
+      }
+      const cursor = document.createElement("span");
+      cursor.className = "cursor";
+      display.append(cursor);
+    }
+
+    function flash(message) {
+      notice.textContent = message;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => {
+        notice.textContent = "";
+      }, 1800);
+    }
+
+    function tokenBeforeCursor() {
+      return expression.at(-1) || "";
+    }
+
+    function currentNumberChunk() {
+      const parts = expression.split(/[+−×÷()]/);
+      return parts.at(-1) || "";
+    }
+
+    function appendNumber(value) {
+      if (clearOnNextNumber) {
+        expression = "";
+        clearOnNextNumber = false;
+      }
+      const prev = tokenBeforeCursor();
+      if (prev === ")") {
+        expression += "×";
+      }
+      expression += value;
+      hideCopyChoices();
+      render();
+    }
+
+    function appendDot() {
+      if (clearOnNextNumber) {
+        expression = "";
+        clearOnNextNumber = false;
+      }
+      const prev = tokenBeforeCursor();
+      if (prev === ")") {
+        expression += "×0.";
+      } else if (!currentNumberChunk()) {
+        expression += "0.";
+      } else if (!currentNumberChunk().includes(".")) {
+        expression += ".";
+      }
+      hideCopyChoices();
+      render();
+    }
+
+    function appendOperator(op) {
+      clearOnNextNumber = false;
+      hideCopyChoices();
+      if (!expression) {
+        if (op === "−") expression = "−";
+        render();
+        return;
+      }
+
+      const prev = tokenBeforeCursor();
+      if (operators.has(prev)) {
+        expression = expression.slice(0, -1) + op;
+      } else if (prev === "(") {
+        if (op === "−") expression += op;
+      } else {
+        expression += op;
+      }
+      render();
+    }
+
+    function smartParen() {
+      clearOnNextNumber = false;
+      hideCopyChoices();
+      const open = [...expression].filter(ch => ch === "(").length;
+      const close = [...expression].filter(ch => ch === ")").length;
+      const prev = tokenBeforeCursor();
+      const canClose = prev && !operators.has(prev) && prev !== "(" && (
+        open > close || (open === close && /[+−]/.test(expression) && !expression.includes("("))
+      );
+
+      if (canClose) {
+        expression += ")";
+      } else {
+        if (prev && (/\d/.test(prev) || prev === "." || prev === ")")) {
+          expression += "×";
+        }
+        expression += "(";
+      }
+      render();
+    }
+
+    function backspaceOnce() {
+      if (clearOnNextNumber) {
+        clearOnNextNumber = false;
+      }
+      hideCopyChoices();
+      expression = expression.slice(0, -1);
+      render();
+    }
+
+    function clearInput() {
+      expression = "";
+      clearOnNextNumber = false;
+      hideCopyChoices();
+      render();
+    }
+
+    function normalizeExpression(input) {
+      let text = input.replaceAll("−", "-").replaceAll("×", "*").replaceAll("÷", "/");
+      const open = (text.match(/\(/g) || []).length;
+      const close = (text.match(/\)/g) || []).length;
+      if (close > open) text = "(".repeat(close - open) + text;
+      if (open > close) text += ")".repeat(open - close);
+      text = text.replace(/([)\d.])\(/g, "$1*(").replace(/\)([\d.])/g, ")*$1");
+      return text;
+    }
+
+    function tokenize(text) {
+      const tokens = [];
+      let index = 0;
+      while (index < text.length) {
+        const ch = text[index];
+        if (/\s/.test(ch)) {
+          index += 1;
+          continue;
+        }
+        if (/[0-9.]/.test(ch)) {
+          let number = ch;
+          index += 1;
+          while (index < text.length && /[0-9.]/.test(text[index])) {
+            number += text[index];
+            index += 1;
+          }
+          if ((number.match(/\./g) || []).length > 1 || number === ".") {
+            throw new Error("小數點格式不對");
+          }
+          tokens.push({ type: "number", value: Number(number) });
+          continue;
+        }
+        if ("+-*/()".includes(ch)) {
+          tokens.push({ type: ch });
+          index += 1;
+          continue;
+        }
+        throw new Error("算式裡有不能計算的符號");
+      }
+      return tokens;
+    }
+
+    function parseExpression(tokens) {
+      let pos = 0;
+
+      function peek() {
+        return tokens[pos];
+      }
+
+      function consume(type) {
+        if (peek()?.type === type) {
+          pos += 1;
+          return true;
+        }
+        return false;
+      }
+
+      function primary() {
+        if (consume("+")) return primary();
+        if (consume("-")) return -primary();
+        if (consume("(")) {
+          const value = additive();
+          if (!consume(")")) throw new Error("括號還沒關好");
+          return value;
+        }
+        const token = peek();
+        if (!token || token.type !== "number") throw new Error("算式還沒完成");
+        pos += 1;
+        return token.value;
+      }
+
+      function multiplicative() {
+        let value = primary();
+        while (peek() && (peek().type === "*" || peek().type === "/")) {
+          const op = peek().type;
+          pos += 1;
+          const right = primary();
+          if (op === "/" && right === 0) throw new Error("不能除以 0");
+          value = op === "*" ? value * right : value / right;
+        }
+        return value;
+      }
+
+      function additive() {
+        let value = multiplicative();
+        while (peek() && (peek().type === "+" || peek().type === "-")) {
+          const op = peek().type;
+          pos += 1;
+          const right = multiplicative();
+          value = op === "+" ? value + right : value - right;
+        }
+        return value;
+      }
+
+      const result = additive();
+      if (pos !== tokens.length) throw new Error("算式還沒完成");
+      return result;
+    }
+
+    function evaluate(input) {
+      const normalized = normalizeExpression(input);
+      return parseExpression(tokenize(normalized));
+    }
+
+    function prettyNumber(value, maxDigits = 12) {
+      const rounded = Math.abs(value) < 1e-12 ? 0 : value;
+      return Number(rounded.toPrecision(maxDigits)).toLocaleString("en-US", {
+        maximumFractionDigits: 10
+      });
+    }
+
+    function compactNumber(value) {
+      return String(Number(value.toPrecision(12)));
+    }
+
+    function answerVersions(value) {
+      return {
+        round0Label: String(Math.round(value)),
+        round2Label: Number(value.toFixed(2)).toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        }),
+        ceilLabel: String(Math.ceil(value)),
+        round0Value: String(Math.round(value)),
+        round2Value: String(Number(value.toFixed(2))),
+        ceilValue: String(Math.ceil(value))
+      };
+    }
+
+    function isIntegerAnswer(value) {
+      return Math.abs(value - Math.round(value)) < 1e-10;
+    }
+
+    function calculate() {
+      if (!expression || operators.has(tokenBeforeCursor()) || tokenBeforeCursor() === "(") {
+        flash("算式還沒完成");
+        return;
+      }
+
+      try {
+        const original = expression;
+        const result = evaluate(expression);
+        if (!Number.isFinite(result)) throw new Error("結果太大了");
+        lastAnswer = result;
+        const shown = prettyNumber(result);
+        addTapeEntry(original, shown);
+        expression = shown.replaceAll(",", "");
+        clearOnNextNumber = true;
+        showCopyChoices(result);
+        render();
+      } catch (error) {
+        flash(error.message || "這題暫時算不出來");
+      }
+    }
+
+    function addTapeEntry(expr, answer) {
+      empty.hidden = true;
+      const item = document.createElement("article");
+      item.className = "entry";
+      item.innerHTML = `
+        <div class="expr">${escapeHtml(expr)} =</div>
+        <div class="answer">${escapeHtml(answer)}</div>
+        <div class="copied"></div>
+      `;
+      tape.append(item);
+      tape.scrollTop = tape.scrollHeight;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[ch]);
+    }
+
+    function hideCopyChoices() {
+      copyRow.classList.add("hidden");
+      copyRow.innerHTML = "";
+    }
+
+    function showCopyChoices(value) {
+      copyRow.innerHTML = "";
+      copyRow.classList.remove("hidden");
+      addCopyButton("複製", compactNumber(value), "single");
+    }
+
+    function addCopyButton(label, value, extraClass = "") {
+      const button = document.createElement("button");
+      button.className = `copy ${extraClass}`.trim();
+      button.textContent = label;
+      button.addEventListener("click", () => copyText(value));
+      copyRow.append(button);
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        flash(`已複製 ${text}`);
+      } catch {
+        flash("請長按答案手動複製");
+      }
+    }
+
+    function useAnswer(mode) {
+      if (lastAnswer === null) {
+        flash("先算一題才有 ANS");
+        return;
+      }
+      const versions = answerVersions(lastAnswer);
+      expression = mode === "round2" ? versions.round2Value : mode === "round0" ? versions.round0Value : versions.ceilValue;
+      clearOnNextNumber = false;
+      hideCopyChoices();
+      render();
+    }
+
+    document.querySelectorAll("[data-num]").forEach(button => {
+      button.addEventListener("click", () => appendNumber(button.dataset.num));
+    });
+
+    document.querySelector("[data-dot]").addEventListener("click", appendDot);
+
+    document.querySelectorAll("[data-op]").forEach(button => {
+      button.addEventListener("click", () => appendOperator(button.dataset.op));
+    });
+
+    document.querySelectorAll("[data-ans]").forEach(button => {
+      button.addEventListener("click", () => useAnswer(button.dataset.ans));
+    });
+
+    document.getElementById("paren").addEventListener("click", smartParen);
+    document.getElementById("clear").addEventListener("click", clearInput);
+    document.getElementById("equals").addEventListener("click", calculate);
+
+    const backspace = document.getElementById("backspace");
+    backspace.addEventListener("click", backspaceOnce);
+    backspace.addEventListener("pointerdown", () => {
+      clearTimeout(deleteTimer);
+      deleteTimer = setTimeout(() => {
+        deleteTimer = setInterval(backspaceOnce, 75);
+      }, 420);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(eventName => {
+      backspace.addEventListener(eventName, () => {
+        clearTimeout(deleteTimer);
+        clearInterval(deleteTimer);
+        deleteTimer = null;
+      });
+    });
+
+    document.addEventListener("keydown", event => {
+      const key = event.key;
+      if (/^\d$/.test(key)) appendNumber(key);
+      if (key === ".") appendDot();
+      if (key === "+") appendOperator("+");
+      if (key === "-") appendOperator("−");
+      if (key === "*") appendOperator("×");
+      if (key === "/") appendOperator("÷");
+      if (key === "(" || key === ")") smartParen();
+      if (key === "Backspace") backspaceOnce();
+      if (key === "Enter" || key === "=") calculate();
+      if (key === "Escape") clearInput();
+    });
+
+    render();
+  </script>
+</body>
+</html>
