@@ -6,6 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="小蘋果計算機">
   <meta name="theme-color" content="#ead9c4">
+  <link rel="apple-touch-icon" href="app-icon.png?v=2">
+  <link rel="icon" type="image/png" href="app-icon.png?v=2">
   <title>小蘋果計算機 v2</title>
   <style>
     :root {
@@ -97,8 +99,8 @@
       overscroll-behavior: contain;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 4px 0 18px;
+      gap: 4px;
+      padding: 4px 0 8px;
       scrollbar-width: none;
     }
 
@@ -111,7 +113,7 @@
       margin: auto;
       text-align: center;
       color: var(--muted);
-      font-size: clamp(19px, 3.1svh, 27px);
+      font-size: clamp(15px, 2.1svh, 18px);
       font-weight: 800;
       line-height: 1.45;
       white-space: nowrap;
@@ -119,30 +121,44 @@
 
     .entry {
       border-bottom: 1px solid rgba(128, 102, 78, .18);
-      padding: 0 0 10px;
-      text-align: right;
+      padding: 2px 0 5px;
+      display: grid;
+      grid-template-columns: minmax(0, auto) auto;
+      align-items: baseline;
+      justify-content: start;
+      column-gap: 8px;
     }
 
     .entry .expr {
       color: var(--muted);
       font-size: 17px;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
+      line-height: 1.25;
+      text-align: left;
+      max-width: calc(100vw - 150px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .entry .answer {
       color: var(--ink);
-      font-size: 27px;
+      font-size: 21px;
       font-weight: 800;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
+      line-height: 1.25;
+      white-space: nowrap;
     }
 
     .entry .copied {
       color: #8c6947;
       font-size: 13px;
       font-weight: 700;
-      min-height: 18px;
+      grid-column: 1 / -1;
+      min-height: 0;
+      text-align: right;
+    }
+
+    .entry .copied:empty {
+      display: none;
     }
 
     .divider {
@@ -165,7 +181,9 @@
       font-weight: 700;
       line-height: 1.05;
       text-align: right;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
+      overflow: hidden;
+      flex-wrap: nowrap;
     }
 
     .cursor {
@@ -175,6 +193,11 @@
       display: inline-block;
       margin-left: 4px;
       animation: blink 1.05s steps(2, start) infinite;
+    }
+
+    .display-text {
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
 
     @keyframes blink {
@@ -234,6 +257,11 @@
       color: #fff;
       font-size: clamp(22px, 3.1svh, 27px);
       white-space: nowrap;
+    }
+
+    .ans {
+      padding-inline: 4px;
+      font-size: clamp(16px, 2.3svh, 20px);
     }
 
     .copy.single {
@@ -352,7 +380,7 @@
 
     <section class="screen" aria-live="polite">
       <div class="tape" id="tape">
-        <div class="empty" id="empty">按「=」後結果直接顯示，紀錄留在這裡</div>
+        <div class="empty" id="empty" hidden></div>
       </div>
       <div class="copy-row hidden" id="copyRow"></div>
       <div class="input-line" id="display"><span class="cursor"></span></div>
@@ -360,9 +388,9 @@
     </section>
 
     <section class="keypad" aria-label="計算機按鍵">
-      <button class="ans" data-ans="round0">⌊ANS⌋</button>
-      <button class="ans" data-ans="round2">ANS</button>
-      <button class="ans" data-ans="ceil">ANS〜</button>
+      <button class="ans" data-ans="round0">ANS 0</button>
+      <button class="ans" data-ans="round2">ANS .00</button>
+      <button class="ans" data-ans="ceil">ANS ↑</button>
       <button class="backspace" id="backspace" aria-label="刪除">⌫</button>
 
       <button class="paren" id="paren">( )</button>
@@ -402,20 +430,41 @@
     const operators = new Set(["+", "−", "×", "÷"]);
 
     let expression = "";
+    let completedExpression = "";
     let lastAnswer = null;
     let clearOnNextNumber = false;
     let deleteTimer = null;
     let noticeTimer = null;
 
     function render() {
-      const text = expression || "";
+      const text = clearOnNextNumber && completedExpression
+        ? completedExpression
+        : expression || "";
+      display.style.fontSize = "";
       display.innerHTML = "";
+      const textElement = document.createElement("span");
+      textElement.className = "display-text";
       if (text) {
-        display.append(document.createTextNode(text));
+        textElement.textContent = text;
       }
+      display.append(textElement);
       const cursor = document.createElement("span");
       cursor.className = "cursor";
       display.append(cursor);
+      fitDisplayText(textElement, cursor);
+    }
+
+    function fitDisplayText(textElement, cursor) {
+      let size = parseFloat(getComputedStyle(display).fontSize);
+      const minimumSize = 18;
+
+      while (
+        textElement.scrollWidth + cursor.offsetWidth + 8 > display.clientWidth &&
+        size > minimumSize
+      ) {
+        size -= 1;
+        display.style.fontSize = `${size}px`;
+      }
     }
 
     function flash(message) {
@@ -670,6 +719,7 @@
         const shown = prettyNumber(result);
         addTapeEntry(original, shown);
         expression = shown.replaceAll(",", "");
+        completedExpression = `${original} = ${shown}`;
         clearOnNextNumber = true;
         showCopyChoices(result);
         render();
@@ -737,7 +787,7 @@
       const versions = answerVersions(lastAnswer);
       expression = mode === "round2" ? versions.round2Value : mode === "round0" ? versions.round0Value : versions.ceilValue;
       clearOnNextNumber = false;
-      hideCopyChoices();
+      showCopyChoices(Number(expression));
       render();
     }
 

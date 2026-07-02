@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>小蘋果計算機配色預覽</title>
+  <style>
+    :root {
+      --page: #f8f4ee;
+      --ink: #3c2815;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", "PingFang TC", sans-serif;
+      padding: 28px 18px 36px;
+    }
+
+    h1 {
+      max-width: 1120px;
+      margin: 0 auto 18px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      color: #8d6040;
+    }
+
+    .preview-grid {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .theme-card {
+      border-radius: 22px;
+      padding: 14px;
+      background: rgba(255, 255, 255, .46);
+      box-shadow: 0 16px 34px rgba(72, 45, 22, .11);
+    }
+
+    .theme-name {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 850;
+      color: var(--title);
+    }
+
+    .phone {
+      border-radius: 26px;
+      padding: 20px 18px 18px;
+      background: var(--panel);
+      min-height: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      padding-left: 5px;
+      color: var(--title);
+      font-weight: 850;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .screen {
+      height: 198px;
+      border: 1.8px solid var(--line);
+      border-radius: 21px;
+      background: var(--screen);
+      padding: 14px 18px 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history {
+      flex: 1;
+      text-align: right;
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 750;
+    }
+
+    .history b {
+      display: block;
+      color: var(--ink);
+      font-size: 27px;
+      margin-top: 2px;
+    }
+
+    .screen-line {
+      height: 2px;
+      background: var(--line);
+      opacity: .8;
+      margin-bottom: 9px;
+    }
+
+    .copy-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 9px;
+    }
+
+    .display {
+      text-align: right;
+      color: var(--ink);
+      font-size: 40px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .key {
+      height: 52px;
+      border-radius: 14px;
+      background: var(--num);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 850;
+      box-shadow: none;
+    }
+
+    .key.small {
+      font-size: 22px;
+      color: #fff;
+      background: var(--ans);
+    }
+
+    .key.copy {
+      height: 34px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: #fff;
+      background: var(--ans);
+    }
+
+    .key.copy.only {
+      grid-column: 3;
+    }
+
+    .key.green {
+      background: var(--green);
+      color: var(--green-ink);
+    }
+
+    .key.clear {
+      color: #fff;
+      background: var(--clear);
+    }
+
+    .key.op {
+      color: #fff;
+      background: var(--op);
+    }
+
+    .key.eq {
+      color: #fff;
+      background: var(--eq);
+    }
+
+    .a {
+      --panel: #e8d9c8;
+      --screen: #f0dfc8;
+      --num: #fff9f2;
+      --ans: #cda06b;
+      --green: #a8b99d;
+      --green-ink: #28442c;
+      --clear: #b95243;
+      --op: #be735c;
+      --eq: #8c5d35;
+      --title: #96613c;
+      --muted: #9b8066;
+      --line: #c4a06c;
+      --shadow: rgba(79, 50, 24, .16);
+    }
+
+    .b {
+      --panel: #ead8d0;
+      --screen: #f1ded5;
+      --num: #fff8f1;
+      --ans: #c18f7c;
+      --green: #9fa98f;
+      --green-ink: #334034;
+      --clear: #a95d57;
+      --op: #b86b63;
+      --eq: #87534d;
+      --title: #925d54;
+      --muted: #a17c73;
+      --line: #c69b8e;
+      --shadow: rgba(75, 47, 42, .16);
+    }
+
+    .c {
+      --panel: #e3ded4;
+      --screen: #ece8de;
+      --num: #faf8f2;
+      --ans: #9eadb5;
+      --green: #9dae9a;
+      --green-ink: #2f4136;
+      --clear: #a96b61;
+      --op: #b87866;
+      --eq: #64717a;
+      --title: #687276;
+      --muted: #85847b;
+      --line: #a9a194;
+      --shadow: rgba(49, 50, 47, .16);
+    }
+
+    @media (max-width: 980px) {
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .theme-card {
+        max-width: 430px;
+        margin: 0 auto;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>小蘋果計算機：墨蘭迪配色預覽</h1>
+  <section class="preview-grid" aria-label="三種配色預覽">
+    <article class="theme-card a">
+      <h2 class="theme-name">A 奶茶鼠尾草</h2>
+      <div class="phone">
+        <div class="brand">小蘋果計算機 <span>v2</span></div>
+        <div class="screen">
+          <div class="history">1÷4 =<b>0.25</b></div>
+          <div class="screen-line"></div>
+          <div class="copy-row">
+            <div class="key copy only">複製</div>
+          </div>
+          <div class="display">0.25</div>
+        </div>
+        <div class="keys">
+          <div class="key small">⌊ANS⌋</div><div class="key small">ANS</div><div class="key small">ANS〜</div><div class="key green">⌫</div>
+          <div class="key green">( )</div><div class="key"></div><div class="key clear">AC</div><div class="key op">÷</div>
+          <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key op">×</div>
+          <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key op">−</div>
+          <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key op">+</div>
+          <div class="key">00</div><div class="key">0</div><div class="key">.</div><div class="key eq">=</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="theme-card b">
+      <h2 class="theme-name">B 霧粉橄欖</h2>
+      <div class="phone">
+        <div class="brand">小蘋果計算機 <span>v2</span></div>
+        <div class="screen">
+          <div class="history">1÷4 =<b>0.25</b></div>
+          <div class="screen-line"></div>
+          <div class="copy-row">
+            <div class="key copy only">複製</div>
+          </div>
+          <div class="display">0.25</div>
+        </div>
+        <div class="keys">
+          <div class="key small">⌊ANS⌋</div><div class="key small">ANS</div><div class="key small">ANS〜</div><div class="key green">⌫</div>
+          <div class="key green">( )</div><div class="key"></div><div class="key clear">AC</div><div class="key op">÷</div>
+          <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key op">×</div>
+          <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key op">−</div>
+          <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key op">+</div>
+          <div class="key">00</div><div class="key">0</div><div class="key">.</div><div class="key eq">=</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="theme-card c">
+      <h2 class="theme-name">C 霧藍燕麥</h2>
+      <div class="phone">
+        <div class="brand">小蘋果計算機 <span>v2</span></div>
+        <div class="screen">
+          <div class="history">1÷4 =<b>0.25</b></div>
+          <div class="screen-line"></div>
+          <div class="copy-row">
+            <div class="key copy only">複製</div>
+          </div>
+          <div class="display">0.25</div>
+        </div>
+        <div class="keys">
+          <div class="key small">⌊ANS⌋</div><div class="key small">ANS</div><div class="key small">ANS〜</div><div class="key green">⌫</div>
+          <div class="key green">( )</div><div class="key"></div><div class="key clear">AC</div><div class="key op">÷</div>
+          <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key op">×</div>
+          <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key op">−</div>
+          <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key op">+</div>
+          <div class="key">00</div><div class="key">0</div><div class="key">.</div><div class="key eq">=</div>
+        </div>
+      </div>
+    </article>
+  </section>
+</body>
+</html>
