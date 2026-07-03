@@ -123,15 +123,16 @@
       border-bottom: 1px solid rgba(128, 102, 78, .18);
       padding: 2px 0 5px;
       display: grid;
-      grid-template-columns: minmax(0, auto) auto;
+      grid-template-columns: minmax(0, auto) auto auto;
       align-items: baseline;
       justify-content: start;
       column-gap: 8px;
     }
 
     .entry .expr {
-      color: var(--muted);
+      color: #6f543e;
       font-size: 17px;
+      font-weight: 600;
       line-height: 1.25;
       text-align: left;
       max-width: calc(100vw - 150px);
@@ -159,6 +160,18 @@
 
     .entry .copied:empty {
       display: none;
+    }
+
+    .entry-badge {
+      padding: 2px 8px;
+      border: 2px solid var(--gold);
+      border-radius: 8px;
+      color: #76502f;
+      background: rgba(255, 249, 242, .55);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
     }
 
     .divider {
@@ -205,10 +218,11 @@
     }
 
     .copy-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
       gap: 8px;
-      min-height: 42px;
+      min-height: 36px;
       transition: min-height .18s ease, opacity .18s ease;
     }
 
@@ -228,6 +242,9 @@
 
     button {
       appearance: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
       border: 0;
       min-width: 0;
       height: clamp(70px, 8.2svh, 78px);
@@ -264,17 +281,29 @@
       font-size: clamp(16px, 2.3svh, 20px);
     }
 
-    .copy.single {
-      grid-column: 3;
-    }
-
     .copy {
       font-weight: 500;
+      font-size: clamp(16px, 2.1svh, 19px);
     }
 
     .copy-row button {
-      height: 42px;
-      border-radius: 13px;
+      width: auto;
+      height: 36px;
+      padding-inline: 14px;
+      border-radius: 11px;
+    }
+
+    .result-badge {
+      height: 36px;
+      padding-inline: 14px;
+      border: 2px solid var(--gold);
+      border-radius: 11px;
+      color: #76502f;
+      background: rgba(255, 249, 242, .55);
+      font-size: clamp(16px, 2.1svh, 19px);
+      font-weight: 700;
+      line-height: 32px;
+      white-space: nowrap;
     }
 
     button[data-dot] {
@@ -291,10 +320,35 @@
       font-size: clamp(31px, 4.6svh, 45px);
     }
 
-    .placeholder {
-      background: rgba(255, 250, 244, .22);
-      box-shadow: none;
-      pointer-events: none;
+    .invoice {
+      background: #d8c5ac;
+      color: var(--ink);
+      font-size: clamp(17px, 2.3svh, 21px);
+    }
+
+    .tax {
+      background: #c8b994;
+      color: var(--ink);
+      font-size: clamp(17px, 2.3svh, 21px);
+    }
+
+    .utility-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .utility-row button {
+      height: clamp(64px, 7.5svh, 72px);
+      padding-inline: 2px;
+      border-radius: 16px;
+    }
+
+    .utility-row .paren,
+    .utility-row .clear,
+    .utility-row .op {
+      font-size: clamp(28px, 4.3svh, 40px);
     }
 
     .clear {
@@ -393,10 +447,13 @@
       <button class="ans" data-ans="ceil">ANS ↑</button>
       <button class="backspace" id="backspace" aria-label="刪除">⌫</button>
 
-      <button class="paren" id="paren">( )</button>
-      <button class="placeholder" aria-hidden="true" tabindex="-1"></button>
-      <button class="clear" id="clear">AC</button>
-      <button class="op" data-op="÷">÷</button>
+      <div class="utility-row">
+        <button class="paren" id="paren">( )</button>
+        <button class="tax" id="tax">5%稅</button>
+        <button class="invoice" id="invoice">發票</button>
+        <button class="clear" id="clear">AC</button>
+        <button class="op" data-op="÷">÷</button>
+      </div>
 
       <button data-num="7">7</button>
       <button data-num="8">8</button>
@@ -432,6 +489,8 @@
     let expression = "";
     let completedExpression = "";
     let lastAnswer = null;
+    let copiedPrincipal = null;
+    let invoicePrincipal = null;
     let clearOnNextNumber = false;
     let deleteTimer = null;
     let noticeTimer = null;
@@ -487,6 +546,8 @@
     function appendNumber(value) {
       if (clearOnNextNumber) {
         expression = "";
+        completedExpression = "";
+        invoicePrincipal = null;
         clearOnNextNumber = false;
       }
       const prev = tokenBeforeCursor();
@@ -501,6 +562,8 @@
     function appendDot() {
       if (clearOnNextNumber) {
         expression = "";
+        completedExpression = "";
+        invoicePrincipal = null;
         clearOnNextNumber = false;
       }
       const prev = tokenBeforeCursor();
@@ -517,6 +580,7 @@
 
     function appendOperator(op) {
       clearOnNextNumber = false;
+      completedExpression = "";
       hideCopyChoices();
       if (!expression) {
         if (op === "−") expression = "−";
@@ -537,6 +601,7 @@
 
     function smartParen() {
       clearOnNextNumber = false;
+      completedExpression = "";
       hideCopyChoices();
       const open = [...expression].filter(ch => ch === "(").length;
       const close = [...expression].filter(ch => ch === ")").length;
@@ -560,6 +625,7 @@
       if (clearOnNextNumber) {
         clearOnNextNumber = false;
       }
+      completedExpression = "";
       hideCopyChoices();
       expression = expression.slice(0, -1);
       render();
@@ -567,6 +633,8 @@
 
     function clearInput() {
       expression = "";
+      completedExpression = "";
+      invoicePrincipal = null;
       clearOnNextNumber = false;
       hideCopyChoices();
       render();
@@ -716,6 +784,7 @@
         const result = evaluate(expression);
         if (!Number.isFinite(result)) throw new Error("結果太大了");
         lastAnswer = result;
+        invoicePrincipal = result;
         const shown = prettyNumber(result);
         addTapeEntry(original, shown);
         expression = shown.replaceAll(",", "");
@@ -728,13 +797,14 @@
       }
     }
 
-    function addTapeEntry(expr, answer) {
+    function addTapeEntry(expr, answer, badgeLabel = "") {
       empty.hidden = true;
       const item = document.createElement("article");
       item.className = "entry";
       item.innerHTML = `
         <div class="expr">${escapeHtml(expr)} =</div>
         <div class="answer">${escapeHtml(answer)}</div>
+        ${badgeLabel ? `<span class="entry-badge">${escapeHtml(badgeLabel)}</span>` : ""}
         <div class="copied"></div>
       `;
       tape.append(item);
@@ -756,9 +826,15 @@
       copyRow.innerHTML = "";
     }
 
-    function showCopyChoices(value) {
+    function showCopyChoices(value, badgeLabel = "") {
       copyRow.innerHTML = "";
       copyRow.classList.remove("hidden");
+      if (badgeLabel) {
+        const badge = document.createElement("span");
+        badge.className = "result-badge";
+        badge.textContent = badgeLabel;
+        copyRow.append(badge);
+      }
       addCopyButton("複製", compactNumber(value), "single");
     }
 
@@ -771,12 +847,75 @@
     }
 
     async function copyText(text) {
+      const numericValue = Number(text);
+      if (Number.isFinite(numericValue)) {
+        copiedPrincipal = numericValue;
+        invoicePrincipal = numericValue;
+      }
+
       try {
         await navigator.clipboard.writeText(text);
         flash(`已複製 ${text}`);
       } catch {
         flash("請長按答案手動複製");
       }
+    }
+
+    function getInvoiceAmounts() {
+      const directInput = expression.replaceAll(",", "").replace("−", "-").trim();
+      const hasDirectAmount = !clearOnNextNumber && /^-?\d+(?:\.\d+)?$/.test(directInput);
+      const principal = hasDirectAmount
+        ? Number(directInput)
+        : invoicePrincipal ?? copiedPrincipal;
+
+      if (principal === null || !Number.isFinite(principal)) {
+        flash("請直接輸入金額，或先按複製");
+        return null;
+      }
+
+      invoicePrincipal = principal;
+      const tax = Math.round(principal * 0.05 + Number.EPSILON);
+      const total = Math.round((principal + tax + Number.EPSILON) * 100) / 100;
+      return {
+        principal,
+        tax,
+        total,
+        principalShown: prettyNumber(principal),
+        taxShown: prettyNumber(tax),
+        totalShown: prettyNumber(total)
+      };
+    }
+
+    function showCalculatedAmount(value, formula, message, badgeLabel) {
+      lastAnswer = value;
+      expression = compactNumber(value);
+      completedExpression = formula;
+      clearOnNextNumber = true;
+      showCopyChoices(value, badgeLabel);
+      render();
+      flash(message);
+    }
+
+    function calculateTax() {
+      const amounts = getInvoiceAmounts();
+      if (!amounts) return;
+
+      const formula = `${amounts.principalShown} × 5% = ${amounts.taxShown}`;
+      addTapeEntry(`${amounts.principalShown} × 5%`, amounts.taxShown, "稅金");
+      showCalculatedAmount(amounts.tax, formula, `5%稅金 ${amounts.taxShown}`, "稅金");
+    }
+
+    function calculateInvoice() {
+      const amounts = getInvoiceAmounts();
+      if (!amounts) return;
+
+      const formula = `${amounts.principalShown} + ${amounts.taxShown} = ${amounts.totalShown}`;
+      addTapeEntry(
+        `${amounts.principalShown} + ${amounts.taxShown}`,
+        amounts.totalShown,
+        "發票"
+      );
+      showCalculatedAmount(amounts.total, formula, `發票總額 ${amounts.totalShown}`, "發票");
     }
 
     function useAnswer(mode) {
@@ -806,8 +945,17 @@
     });
 
     document.getElementById("paren").addEventListener("click", smartParen);
+    document.getElementById("tax").addEventListener("click", calculateTax);
+    document.getElementById("invoice").addEventListener("click", calculateInvoice);
     document.getElementById("clear").addEventListener("click", clearInput);
     document.getElementById("equals").addEventListener("click", calculate);
+
+    document.querySelector(".keypad").addEventListener("contextmenu", event => {
+      event.preventDefault();
+    });
+    document.querySelector(".keypad").addEventListener("selectstart", event => {
+      event.preventDefault();
+    });
 
     const backspace = document.getElementById("backspace");
     backspace.addEventListener("click", backspaceOnce);
