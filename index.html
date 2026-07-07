@@ -57,7 +57,7 @@
       box-shadow: none;
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 14px;
     }
 
     header {
@@ -83,7 +83,7 @@
     }
 
     .screen {
-      height: clamp(285px, 32svh, 308px);
+      height: clamp(315px, 38svh, 372px);
       border: 3px solid var(--line);
       border-radius: 26px;
       background: var(--panel-soft);
@@ -237,7 +237,14 @@
     .keypad {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
+      gap: 12px;
+    }
+
+    .memory-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
     }
 
     button {
@@ -269,21 +276,42 @@
     }
 
     .ans,
-    .copy {
+    .set-x,
+    .copy,
+    .share-action {
       background: var(--gold);
       color: #fff;
       font-size: clamp(22px, 3.1svh, 27px);
       white-space: nowrap;
     }
 
-    .ans {
+    .ans,
+    .set-x {
       padding-inline: 4px;
-      font-size: clamp(16px, 2.3svh, 20px);
+      font-size: clamp(14px, 2svh, 18px);
+    }
+
+    .set-x {
+      background: #8f9f91;
+      color: #fff9f2;
+      font-weight: 900;
+    }
+
+    .set-x .x-mark {
+      font-size: 1.18em;
+      font-weight: 950;
     }
 
     .copy {
       font-weight: 500;
       font-size: clamp(16px, 2.1svh, 19px);
+    }
+
+    .share-action {
+      background: var(--green);
+      color: var(--green-dark);
+      font-size: clamp(16px, 2.1svh, 19px);
+      font-weight: 700;
     }
 
     .copy-row button {
@@ -317,7 +345,7 @@
     }
 
     .backspace {
-      font-size: clamp(31px, 4.6svh, 45px);
+      font-size: clamp(28px, 4.2svh, 40px);
     }
 
     .invoice {
@@ -336,9 +364,10 @@
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
+      gap: 12px;
     }
 
+    .memory-row button,
     .utility-row button {
       height: clamp(64px, 7.5svh, 72px);
       padding-inline: 2px;
@@ -400,7 +429,7 @@
       }
 
       .keypad {
-        gap: 12px;
+        gap: 10px;
       }
 
       button {
@@ -416,7 +445,7 @@
       }
 
       .screen {
-        height: 234px;
+        height: 270px;
       }
 
       button {
@@ -442,10 +471,13 @@
     </section>
 
     <section class="keypad" aria-label="計算機按鍵">
-      <button class="ans" data-ans="round0">ANS 0</button>
-      <button class="ans" data-ans="round2">ANS .00</button>
-      <button class="ans" data-ans="ceil">ANS ↑</button>
-      <button class="backspace" id="backspace" aria-label="刪除">⌫</button>
+      <div class="memory-row">
+        <button class="ans" data-ans="round0">ANS 0</button>
+        <button class="ans" data-ans="round2">ANS .00</button>
+        <button class="ans" data-ans="ceil">ANS ↑</button>
+        <button class="set-x" id="setX">設<span class="x-mark">𝒳</span></button>
+        <button class="backspace" id="backspace" aria-label="刪除">⌫</button>
+      </div>
 
       <div class="utility-row">
         <button class="paren" id="paren">( )</button>
@@ -485,10 +517,12 @@
     const copyRow = document.getElementById("copyRow");
     const notice = document.getElementById("notice");
     const operators = new Set(["+", "−", "×", "÷"]);
+    const xSymbol = "𝒳";
 
     let expression = "";
     let completedExpression = "";
     let lastAnswer = null;
+    let savedX = null;
     let copiedPrincipal = null;
     let invoicePrincipal = null;
     let clearOnNextNumber = false;
@@ -539,8 +573,12 @@
     }
 
     function currentNumberChunk() {
-      const parts = expression.split(/[+−×÷()]/);
+      const parts = expression.split(/[+−×÷()𝒳]/);
       return parts.at(-1) || "";
+    }
+
+    function isValueToken(token) {
+      return /\d/.test(token) || token === "." || token === ")" || token === xSymbol;
     }
 
     function appendNumber(value) {
@@ -551,7 +589,7 @@
         clearOnNextNumber = false;
       }
       const prev = tokenBeforeCursor();
-      if (prev === ")") {
+      if (prev === ")" || prev === xSymbol) {
         expression += "×";
       }
       expression += value;
@@ -567,7 +605,7 @@
         clearOnNextNumber = false;
       }
       const prev = tokenBeforeCursor();
-      if (prev === ")") {
+      if (prev === ")" || prev === xSymbol) {
         expression += "×0.";
       } else if (!currentNumberChunk()) {
         expression += "0.";
@@ -593,6 +631,8 @@
         expression = expression.slice(0, -1) + op;
       } else if (prev === "(") {
         if (op === "−") expression += op;
+      } else if (prev === xSymbol) {
+        expression += op;
       } else {
         expression += op;
       }
@@ -613,7 +653,7 @@
       if (canClose) {
         expression += ")";
       } else {
-        if (prev && (/\d/.test(prev) || prev === "." || prev === ")")) {
+        if (prev && isValueToken(prev)) {
           expression += "×";
         }
         expression += "(";
@@ -642,6 +682,10 @@
 
     function normalizeExpression(input) {
       let text = input.replaceAll("−", "-").replaceAll("×", "*").replaceAll("÷", "/");
+      if (text.includes(xSymbol)) {
+        if (savedX === null) throw new Error("還沒有設定 𝒳");
+        text = text.replaceAll(xSymbol, `(${compactNumber(savedX)})`);
+      }
       const open = (text.match(/\(/g) || []).length;
       const close = (text.match(/\)/g) || []).length;
       if (close > open) text = "(".repeat(close - open) + text;
@@ -797,6 +841,35 @@
       }
     }
 
+    function useStoredX() {
+      if (lastAnswer !== null && clearOnNextNumber) {
+        savedX = lastAnswer;
+        addTapeEntry(xSymbol, prettyNumber(savedX));
+        flash(`已設定 ${xSymbol} = ${prettyNumber(savedX)}`);
+        return;
+      }
+
+      if (savedX === null) {
+        flash(`先算出答案，再按設${xSymbol}`);
+        return;
+      }
+
+      if (clearOnNextNumber) {
+        expression = "";
+        completedExpression = "";
+        invoicePrincipal = null;
+        clearOnNextNumber = false;
+      }
+
+      const prev = tokenBeforeCursor();
+      if (prev && isValueToken(prev)) {
+        expression += "×";
+      }
+      expression += xSymbol;
+      hideCopyChoices();
+      render();
+    }
+
     function addTapeEntry(expr, answer, badgeLabel = "") {
       empty.hidden = true;
       const item = document.createElement("article");
@@ -836,6 +909,7 @@
         copyRow.append(badge);
       }
       addCopyButton("複製", compactNumber(value), "single");
+      addShareButton();
     }
 
     function addCopyButton(label, value, extraClass = "") {
@@ -844,6 +918,120 @@
       button.textContent = label;
       button.addEventListener("click", () => copyText(value));
       copyRow.append(button);
+    }
+
+    function addShareButton() {
+      const button = document.createElement("button");
+      button.className = "share-action";
+      button.textContent = "截圖";
+      button.addEventListener("click", shareCalculationImage);
+      copyRow.append(button);
+    }
+
+    function drawRoundedRect(context, x, y, width, height, radius) {
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.lineTo(x + width - radius, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + radius);
+      context.lineTo(x + width, y + height - radius);
+      context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      context.lineTo(x + radius, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - radius);
+      context.lineTo(x, y + radius);
+      context.quadraticCurveTo(x, y, x + radius, y);
+      context.closePath();
+    }
+
+    async function shareCalculationImage() {
+      const formula = clearOnNextNumber && completedExpression
+        ? completedExpression
+        : expression;
+      if (!formula) {
+        flash("請先完成一題計算");
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 630;
+      const context = canvas.getContext("2d");
+      const badgeLabel = copyRow.querySelector(".result-badge")?.textContent || "";
+
+      context.fillStyle = "#e8d9c8";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawRoundedRect(context, 55, 55, 1090, 520, 42);
+      context.fillStyle = "#f0dfc8";
+      context.fill();
+      context.lineWidth = 8;
+      context.strokeStyle = "#c4a06c";
+      context.stroke();
+
+      context.fillStyle = "#765f4c";
+      context.font = '700 42px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+      context.textAlign = "left";
+      context.fillText("小蘋果計算機", 105, 140);
+
+      if (badgeLabel) {
+        context.font = '700 30px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+        const badgeWidth = context.measureText(badgeLabel).width + 54;
+        drawRoundedRect(context, 1095 - badgeWidth, 95, badgeWidth, 58, 18);
+        context.fillStyle = "#fff9f2";
+        context.fill();
+        context.lineWidth = 4;
+        context.strokeStyle = "#cda06b";
+        context.stroke();
+        context.fillStyle = "#76502f";
+        context.textAlign = "center";
+        context.fillText(badgeLabel, 1095 - badgeWidth / 2, 135);
+      }
+
+      context.strokeStyle = "#c4a06c";
+      context.lineWidth = 3;
+      context.beginPath();
+      context.moveTo(105, 185);
+      context.lineTo(1095, 185);
+      context.stroke();
+
+      let fontSize = 80;
+      context.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif`;
+      while (context.measureText(formula).width > 990 && fontSize > 34) {
+        fontSize -= 2;
+        context.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif`;
+      }
+      context.fillStyle = "#3c2815";
+      context.textAlign = "center";
+      context.fillText(formula, 600, 365);
+
+      context.fillStyle = "#9b8066";
+      context.font = '500 28px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+      context.fillText("計算結果", 600, 500);
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      if (!blob) {
+        flash("圖片產生失敗，請再試一次");
+        return;
+      }
+
+      const file = new File([blob], "小蘋果計算結果.png", { type: "image/png" });
+      try {
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: "小蘋果計算結果", text: formula });
+        } else if (navigator.share) {
+          await navigator.share({ title: "小蘋果計算結果", text: formula });
+        } else {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = file.name;
+          link.click();
+          URL.revokeObjectURL(link.href);
+          flash("算式圖片已儲存");
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          flash("無法分享，請再試一次");
+        }
+      }
     }
 
     async function copyText(text) {
@@ -947,6 +1135,7 @@
     document.getElementById("paren").addEventListener("click", smartParen);
     document.getElementById("tax").addEventListener("click", calculateTax);
     document.getElementById("invoice").addEventListener("click", calculateInvoice);
+    document.getElementById("setX").addEventListener("click", useStoredX);
     document.getElementById("clear").addEventListener("click", clearInput);
     document.getElementById("equals").addEventListener("click", calculate);
 
@@ -982,6 +1171,7 @@
       if (key === "*") appendOperator("×");
       if (key === "/") appendOperator("÷");
       if (key === "(" || key === ")") smartParen();
+      if (key.toLowerCase() === "x") useStoredX();
       if (key === "Backspace") backspaceOnce();
       if (key === "Enter" || key === "=") calculate();
       if (key === "Escape") clearInput();
