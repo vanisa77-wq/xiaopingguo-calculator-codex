@@ -123,10 +123,10 @@
       border-bottom: 1px solid rgba(128, 102, 78, .18);
       padding: 2px 0 5px;
       display: grid;
-      grid-template-columns: minmax(0, auto) auto auto;
-      align-items: baseline;
-      justify-content: start;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: start;
       column-gap: 8px;
+      width: 100%;
     }
 
     .entry .expr {
@@ -135,10 +135,12 @@
       font-weight: 600;
       line-height: 1.25;
       text-align: left;
-      max-width: calc(100vw - 150px);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      min-width: 0;
+      max-width: none;
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      text-overflow: clip;
     }
 
     .entry .answer {
@@ -452,6 +454,15 @@
         height: 64px;
       }
     }
+
+    /* 手機觸控時縮小按鍵死角；滑鼠版維持原本間距。 */
+    @media (hover: none) and (pointer: coarse) {
+      .keypad,
+      .memory-row,
+      .utility-row {
+        gap: 7px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -549,7 +560,7 @@
 
     function fitDisplayText(textElement, cursor) {
       let size = parseFloat(getComputedStyle(display).fontSize);
-      const minimumSize = 18;
+      const minimumSize = 13;
 
       while (
         textElement.scrollWidth + cursor.offsetWidth + 8 > display.clientWidth &&
@@ -881,13 +892,17 @@
       const item = document.createElement("article");
       item.className = "entry";
       item.innerHTML = `
-        <div class="expr">${escapeHtml(expr)} =</div>
+        <div class="expr">${formatTapeExpression(expr)} =</div>
         <div class="answer">${escapeHtml(answer)}</div>
         ${badgeLabel ? `<span class="entry-badge">${escapeHtml(badgeLabel)}</span>` : ""}
         <div class="copied"></div>
       `;
       tape.append(item);
       scrollTapeToBottom();
+    }
+
+    function formatTapeExpression(value) {
+      return escapeHtml(value).replace(/([+−×÷])/g, "$1<wbr>");
     }
 
     function escapeHtml(value) {
@@ -1146,11 +1161,41 @@
     document.getElementById("clear").addEventListener("click", clearInput);
     document.getElementById("equals").addEventListener("click", calculate);
 
-    document.querySelector(".keypad").addEventListener("contextmenu", event => {
+    const keypad = document.querySelector(".keypad");
+
+    keypad.addEventListener("contextmenu", event => {
       event.preventDefault();
     });
-    document.querySelector(".keypad").addEventListener("selectstart", event => {
+    keypad.addEventListener("selectstart", event => {
       event.preventDefault();
+    });
+
+    /*
+      手指落在按鍵間的小縫時，改按最近的按鍵。只處理觸控筆／手指，
+      而且原本已點中按鍵時不介入，避免一按出現兩次。
+    */
+    keypad.addEventListener("pointerup", event => {
+      if (event.pointerType === "mouse" || event.target.closest("button")) return;
+
+      const buttons = [...keypad.querySelectorAll("button")];
+      let nearest = null;
+      let nearestDistance = Infinity;
+
+      buttons.forEach(button => {
+        const rect = button.getBoundingClientRect();
+        const dx = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right);
+        const dy = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
+        const distance = Math.hypot(dx, dy);
+        if (distance < nearestDistance) {
+          nearest = button;
+          nearestDistance = distance;
+        }
+      });
+
+      if (nearest && nearestDistance <= 16) {
+        event.preventDefault();
+        nearest.click();
+      }
     });
 
     const backspace = document.getElementById("backspace");
