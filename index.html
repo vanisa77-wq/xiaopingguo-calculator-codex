@@ -83,7 +83,7 @@
     }
 
     .screen {
-      height: clamp(315px, 38svh, 372px);
+      height: clamp(400px, 48svh, 470px);
       border: 3px solid var(--line);
       border-radius: 26px;
       background: var(--panel-soft);
@@ -102,6 +102,7 @@
       gap: 4px;
       padding: 4px 0 16px;
       scrollbar-width: none;
+      scroll-snap-type: y proximity;
     }
 
     .tape::-webkit-scrollbar {
@@ -127,6 +128,24 @@
       align-items: start;
       column-gap: 8px;
       width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .16s ease, padding .16s ease;
+      scroll-snap-align: start;
+    }
+
+    .entry.selected {
+      padding-inline: 8px;
+      background: rgba(205, 160, 107, .16);
+    }
+
+    .entry-title {
+      grid-column: 1 / -1;
+      color: #8c5d35;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 2px;
     }
 
     .entry .expr {
@@ -162,6 +181,20 @@
 
     .entry .copied:empty {
       display: none;
+    }
+
+    .number-label {
+      display: inline-flex;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 15px;
+      font-weight: 400;
+      vertical-align: baseline;
+      white-space: nowrap;
     }
 
     .entry-badge {
@@ -215,6 +248,53 @@
       white-space: nowrap;
     }
 
+    .draft-title {
+      min-height: 22px;
+      color: #8c5d35;
+      font-size: 15px;
+      font-weight: 800;
+      text-align: right;
+      padding-top: 4px;
+    }
+
+    .draft-title:empty {
+      min-height: 0;
+      padding: 0;
+    }
+
+    .inline-number-label {
+      display: inline-flex;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 15px;
+      font-weight: 400;
+      vertical-align: baseline;
+    }
+
+    .number-label::after,
+    .inline-number-label::after {
+      content: "";
+      display: inline-block;
+      width: 1px;
+      height: .9em;
+      margin: 0 2px;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .entry .inline-number-label {
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      font-size: 15px;
+      line-height: 1.25;
+      vertical-align: baseline;
+    }
+
     @keyframes blink {
       50% { opacity: 0; }
     }
@@ -228,11 +308,7 @@
       transition: min-height .18s ease, opacity .18s ease;
     }
 
-    .copy-row.hidden {
-      display: none;
-    }
-
-    .copy-row:not(.hidden) {
+    .copy-row:not(:empty) {
       margin-bottom: 8px;
     }
 
@@ -256,7 +332,7 @@
       -webkit-touch-callout: none;
       border: 0;
       min-width: 0;
-      height: clamp(70px, 8.2svh, 78px);
+      height: clamp(58px, 6.5svh, 64px);
       border-radius: 18px;
       color: var(--ink);
       background: var(--cream);
@@ -323,6 +399,13 @@
       border-radius: 11px;
     }
 
+    .note-action {
+      background: #c78370;
+      color: #fff;
+      font-size: clamp(16px, 2.1svh, 19px);
+      font-weight: 800;
+    }
+
     .result-badge {
       height: 36px;
       padding-inline: 14px;
@@ -371,7 +454,7 @@
 
     .memory-row button,
     .utility-row button {
-      height: clamp(64px, 7.5svh, 72px);
+      height: clamp(52px, 6svh, 58px);
       padding-inline: 2px;
       border-radius: 16px;
     }
@@ -406,6 +489,211 @@
       line-height: 1.2;
     }
 
+    .note-panel {
+      width: fit-content;
+      max-width: 100%;
+      padding: 6px 8px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+
+    .note-panel[hidden] {
+      display: none;
+    }
+
+    .note-panel-form {
+      display: grid;
+      gap: 6px;
+    }
+
+    .note-fields {
+      display: grid;
+      grid-template-columns: repeat(3, max-content);
+      gap: 5px 8px;
+    }
+
+    .note-field {
+      display: grid;
+      grid-template-columns: max-content 78px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .note-field.formula-field {
+      grid-template-columns: max-content 90px;
+    }
+
+    .note-field-label {
+      color: #6f543e;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .note-field-input {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding-inline: 8px;
+      border: 2px solid #cfb184;
+      border-radius: 8px;
+      outline: none;
+      color: var(--ink);
+      background: #fffaf4;
+      font: inherit;
+      font-size: 14px;
+      user-select: text;
+    }
+
+    .note-field-input:focus {
+      border-color: #9f7357;
+    }
+
+    .note-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .note-actions button {
+      width: auto;
+      height: 34px;
+      padding-inline: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    dialog {
+      width: min(calc(100% - 28px), 420px);
+      max-height: min(82svh, 720px);
+      padding: 0;
+      border: 2px solid var(--line);
+      border-radius: 24px;
+      color: var(--ink);
+      background: var(--panel-soft);
+      box-shadow: 0 20px 60px rgba(72, 43, 23, .28);
+      overflow: hidden;
+    }
+
+    dialog::backdrop {
+      background: rgba(58, 38, 24, .35);
+      backdrop-filter: blur(3px);
+    }
+
+    .dialog-body {
+      padding: 22px;
+      overflow-y: auto;
+      max-height: min(82svh, 720px);
+    }
+
+    .dialog-body h2 {
+      margin: 0 0 6px;
+      color: #76502f;
+      font-size: 23px;
+    }
+
+    .dialog-help {
+      margin: 0 0 18px;
+      color: #8d735e;
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.5;
+    }
+
+    .field-label {
+      display: block;
+      margin: 14px 0 6px;
+      color: #6f543e;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .text-field {
+      width: 100%;
+      height: 46px;
+      padding: 0 13px;
+      border: 2px solid #cfb184;
+      border-radius: 12px;
+      outline: none;
+      color: var(--ink);
+      background: #fffaf4;
+      font: inherit;
+      font-size: 17px;
+      user-select: text;
+    }
+
+    .text-field:focus {
+      border-color: #b7765f;
+      box-shadow: 0 0 0 3px rgba(183, 118, 95, .13);
+    }
+
+    .label-editor-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .label-editor-row {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label-editor-number {
+      color: #76502f;
+      font-size: 16px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .dialog-actions button,
+    .scope-button {
+      width: auto;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 12px;
+      font-size: 17px;
+    }
+
+    .dialog-cancel {
+      background: #ded0bc;
+      color: #59422f;
+    }
+
+    .dialog-save {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    .scope-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .scope-button {
+      width: 100%;
+      justify-content: flex-start;
+      background: #fff9f2;
+      color: #654a34;
+      border: 2px solid rgba(196, 160, 108, .55);
+    }
+
+    .scope-button:disabled {
+      opacity: .42;
+      cursor: default;
+    }
+
     @media (max-width: 390px) {
       body {
         padding-inline: 10px;
@@ -427,11 +715,37 @@
 
       .screen {
         padding-inline: 20px;
-        height: clamp(270px, 36svh, 410px);
+        height: clamp(350px, 46svh, 440px);
       }
 
       .keypad {
         gap: 10px;
+      }
+
+      .note-panel {
+        padding-inline: 6px;
+      }
+
+      .note-panel-form {
+        gap: 4px;
+      }
+
+      .note-fields {
+        grid-template-columns: repeat(3, max-content);
+        gap: 4px 6px;
+      }
+
+      .note-field {
+        grid-template-columns: max-content 64px;
+      }
+
+      .note-field.formula-field {
+        grid-template-columns: max-content 76px;
+      }
+
+      .note-actions button {
+        padding-inline: 7px;
+        font-size: 13px;
       }
 
       button {
@@ -451,7 +765,26 @@
       }
 
       button {
-        height: 64px;
+        height: 56px;
+      }
+
+      .memory-row button,
+      .utility-row button {
+        height: 50px;
+      }
+
+      .screen {
+        height: 340px;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .note-fields {
+        grid-template-columns: repeat(2, max-content);
+      }
+
+      .note-field.formula-field {
+        grid-column: auto;
       }
     }
 
@@ -474,11 +807,22 @@
 
     <section class="screen" aria-live="polite">
       <div class="tape" id="tape">
-        <div class="empty" id="empty" hidden></div>
+        <div class="empty" id="empty">尚無計算記錄</div>
       </div>
       <div class="copy-row hidden" id="copyRow"></div>
+      <div class="draft-title" id="draftTitle"></div>
       <div class="input-line" id="display"><span class="cursor"></span></div>
       <div class="divider"></div>
+    </section>
+
+    <section class="note-panel" id="notePanel" aria-label="註記編輯區" hidden>
+      <form class="note-panel-form" id="noteForm">
+        <div class="note-fields" id="noteFields"></div>
+        <div class="note-actions">
+          <button class="dialog-cancel" type="button" id="cancelNote">取消</button>
+          <button class="dialog-save" type="submit">儲存</button>
+        </div>
+      </form>
     </section>
 
     <section class="keypad" aria-label="計算機按鍵">
@@ -521,14 +865,35 @@
     <div class="notice" id="notice"></div>
   </main>
 
+  <dialog id="screenshotDialog">
+    <div class="dialog-body">
+      <h2>選擇截圖內容</h2>
+      <p class="dialog-help">註記、數字標籤與計算時間會一起保留。</p>
+      <div class="scope-list">
+        <button class="scope-button" type="button" data-shot-scope="current">目前算式</button>
+        <button class="scope-button" type="button" data-shot-scope="selected">選擇的歷史算式</button>
+        <button class="scope-button" type="button" data-shot-scope="all">全部計算紀錄</button>
+      </div>
+      <div class="dialog-actions">
+        <button class="dialog-cancel" type="button" id="cancelScreenshot">取消</button>
+      </div>
+    </div>
+  </dialog>
+
   <script>
     const display = document.getElementById("display");
     const tape = document.getElementById("tape");
     const empty = document.getElementById("empty");
     const copyRow = document.getElementById("copyRow");
     const notice = document.getElementById("notice");
+    const draftTitleElement = document.getElementById("draftTitle");
+    const notePanel = document.getElementById("notePanel");
+    const noteForm = document.getElementById("noteForm");
+    const noteFields = document.getElementById("noteFields");
+    const screenshotDialog = document.getElementById("screenshotDialog");
     const operators = new Set(["+", "−", "×", "÷"]);
     const xSymbol = "𝒳";
+    const storageKey = "littleAppleCalculatorAnnotatedRecordsV1";
 
     let expression = "";
     let completedExpression = "";
@@ -539,23 +904,117 @@
     let clearOnNextNumber = false;
     let deleteTimer = null;
     let noticeTimer = null;
+    let draftTitle = "";
+    let draftLabels = [];
+    let draftResultLabel = "";
+    let records = loadRecords();
+    let activeRecordId = records.at(-1)?.id || null;
+    let selectedRecordId = null;
+    let noteEditingRecordId = null;
 
     function render() {
-      const text = clearOnNextNumber && completedExpression
-        ? completedExpression
-        : expression || "";
+      const activeRecord = clearOnNextNumber
+        ? records.find(record => record.id === activeRecordId)
+        : null;
+      const text = activeRecord
+        ? recordFormulaHtml(activeRecord, true)
+        : annotatedExpressionHtml(expression, draftLabels);
+      draftTitleElement.textContent = activeRecord?.title || draftTitle;
       display.style.fontSize = "";
       display.innerHTML = "";
       const textElement = document.createElement("span");
       textElement.className = "display-text";
       if (text) {
-        textElement.textContent = text;
+        textElement.innerHTML = text;
       }
       display.append(textElement);
       const cursor = document.createElement("span");
       cursor.className = "cursor";
       display.append(cursor);
       fitDisplayText(textElement, cursor);
+    }
+
+    function loadRecords() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        if (!Array.isArray(stored)) return [];
+        return stored.slice(-100).map(record => ({
+          id: String(record.id || `${Date.now()}-${Math.random()}`),
+          expr: String(record.expr || ""),
+          answer: String(record.answer || ""),
+          badgeLabel: String(record.badgeLabel || ""),
+          title: String(record.title || ""),
+          labels: Array.isArray(record.labels) ? record.labels.map(value => String(value || "")) : [],
+          resultLabel: String(record.resultLabel || ""),
+          createdAt: record.createdAt || new Date().toISOString()
+        }));
+      } catch {
+        return [];
+      }
+    }
+
+    function persistRecords() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(records.slice(-100)));
+      } catch {
+        flash("記錄暫時無法保存");
+      }
+    }
+
+    function numberValues(value) {
+      return String(value || "").match(/(?:\d+(?:\.\d*)?|\.\d+)/g) || [];
+    }
+
+    function annotatedExpressionHtml(value, labels = []) {
+      let result = "";
+      let lastIndex = 0;
+      let numberIndex = 0;
+      const text = String(value || "");
+      const matcher = /(?:\d+(?:\.\d*)?|\.\d+)/g;
+      let match;
+      while ((match = matcher.exec(text))) {
+        result += escapeHtml(text.slice(lastIndex, match.index));
+        const label = labels[numberIndex] || "";
+        if (label) {
+          result += `<span class="inline-number-label">${escapeHtml(label)}</span>`;
+        }
+        result += escapeHtml(match[0]);
+        lastIndex = match.index + match[0].length;
+        numberIndex += 1;
+      }
+      return result + escapeHtml(text.slice(lastIndex));
+    }
+
+    function recordFormulaHtml(record, includeAnswer = false) {
+      const expressionHtml = annotatedExpressionHtml(record.expr, record.labels);
+      if (!includeAnswer) return expressionHtml;
+      const resultTag = record.resultLabel
+        ? `<span class="inline-number-label">${escapeHtml(record.resultLabel)}</span>`
+        : "";
+      return `${expressionHtml} = ${resultTag}${escapeHtml(record.answer)}`;
+    }
+
+    function annotatedExpressionText(value, labels = []) {
+      let result = "";
+      let lastIndex = 0;
+      let numberIndex = 0;
+      const text = String(value || "");
+      const matcher = /(?:\d+(?:\.\d*)?|\.\d+)/g;
+      let match;
+      while ((match = matcher.exec(text))) {
+        result += text.slice(lastIndex, match.index);
+        const label = labels[numberIndex] || "";
+        if (label) result += `${label}|`;
+        result += match[0];
+        lastIndex = match.index + match[0].length;
+        numberIndex += 1;
+      }
+      return result + text.slice(lastIndex);
+    }
+
+    function recordToText(record) {
+      const formula = `${annotatedExpressionText(record.expr, record.labels)}=${record.resultLabel ? `${record.resultLabel}|` : ""}${record.answer}`;
+      return record.title ? `${record.title}\n${formula}` : formula;
     }
 
     function fitDisplayText(textElement, cursor) {
@@ -598,7 +1057,12 @@
         completedExpression = "";
         invoicePrincipal = null;
         clearOnNextNumber = false;
+        activeRecordId = null;
+        draftTitle = "";
+        draftLabels = [];
+        draftResultLabel = "";
       }
+      selectedRecordId = null;
       const prev = tokenBeforeCursor();
       if (prev === ")" || prev === xSymbol) {
         expression += "×";
@@ -614,7 +1078,12 @@
         completedExpression = "";
         invoicePrincipal = null;
         clearOnNextNumber = false;
+        activeRecordId = null;
+        draftTitle = "";
+        draftLabels = [];
+        draftResultLabel = "";
       }
+      selectedRecordId = null;
       const prev = tokenBeforeCursor();
       if (prev === ")" || prev === xSymbol) {
         expression += "×0.";
@@ -630,6 +1099,8 @@
     function appendOperator(op) {
       clearOnNextNumber = false;
       completedExpression = "";
+      selectedRecordId = null;
+      activeRecordId = null;
       hideCopyChoices();
       if (!expression) {
         if (op === "−") expression = "−";
@@ -653,6 +1124,8 @@
     function smartParen() {
       clearOnNextNumber = false;
       completedExpression = "";
+      selectedRecordId = null;
+      activeRecordId = null;
       hideCopyChoices();
       const open = [...expression].filter(ch => ch === "(").length;
       const close = [...expression].filter(ch => ch === ")").length;
@@ -675,10 +1148,13 @@
     function backspaceOnce() {
       if (clearOnNextNumber) {
         clearOnNextNumber = false;
+        activeRecordId = null;
       }
+      selectedRecordId = null;
       completedExpression = "";
       hideCopyChoices();
       expression = expression.slice(0, -1);
+      draftLabels = draftLabels.slice(0, numberValues(expression).length);
       render();
     }
 
@@ -687,7 +1163,13 @@
       completedExpression = "";
       invoicePrincipal = null;
       clearOnNextNumber = false;
+      activeRecordId = null;
+      selectedRecordId = null;
+      draftTitle = "";
+      draftLabels = [];
+      draftResultLabel = "";
       hideCopyChoices();
+      renderTape();
       render();
     }
 
@@ -841,11 +1323,14 @@
         lastAnswer = result;
         invoicePrincipal = result;
         const shown = prettyNumber(result);
-        addTapeEntry(original, shown);
+        const record = addTapeEntry(original, shown);
         expression = shown.replaceAll(",", "");
         completedExpression = `${original} = ${shown}`;
         clearOnNextNumber = true;
-        showCopyChoices(result);
+        activeRecordId = record.id;
+        selectedRecordId = record.id;
+        renderTape();
+        showCopyChoices(result, "", record);
         render();
       } catch (error) {
         flash(error.message || "這題暫時算不出來");
@@ -855,6 +1340,23 @@
     function scrollTapeToBottom() {
       requestAnimationFrame(() => {
         tape.scrollTop = tape.scrollHeight;
+      });
+    }
+
+    function scrollRecordIntoView(recordId) {
+      requestAnimationFrame(() => {
+        const item = [...tape.querySelectorAll(".entry")]
+          .find(entry => entry.dataset.recordId === recordId);
+        if (!item) return;
+
+        const tapeRect = tape.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+
+        if (itemRect.top < tapeRect.top) {
+          tape.scrollTop += itemRect.top - tapeRect.top;
+        } else if (itemRect.bottom > tapeRect.bottom) {
+          tape.scrollTop += itemRect.bottom - tapeRect.bottom;
+        }
       });
     }
 
@@ -888,25 +1390,67 @@
     }
 
     function addTapeEntry(expr, answer, badgeLabel = "") {
-      empty.hidden = true;
-      const item = document.createElement("article");
-      item.className = "entry";
-      item.innerHTML = `
-        <div class="expr">${formatTapeExpression(expr)} =</div>
-        <div class="answer">${escapeHtml(answer)}</div>
-        ${badgeLabel ? `<span class="entry-badge">${escapeHtml(badgeLabel)}</span>` : ""}
-        <div class="copied"></div>
-      `;
-      tape.append(item);
+      const record = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        expr: String(expr),
+        answer: String(answer),
+        badgeLabel: String(badgeLabel),
+        title: draftTitle,
+        labels: [...draftLabels],
+        resultLabel: draftResultLabel,
+        createdAt: new Date().toISOString()
+      };
+      records.push(record);
+      records = records.slice(-100);
+      draftTitle = "";
+      draftLabels = [];
+      draftResultLabel = "";
+      persistRecords();
+      renderTape();
       scrollTapeToBottom();
+      return record;
     }
 
-    function formatTapeExpression(value) {
-      return escapeHtml(value).replace(/([+−×÷])/g, "$1<wbr>");
+    function renderTape() {
+      tape.innerHTML = "";
+      if (!records.length) {
+        empty.hidden = false;
+        tape.append(empty);
+        return;
+      }
+
+      empty.hidden = true;
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = `entry${record.id === selectedRecordId ? " selected" : ""}`;
+        item.dataset.recordId = record.id;
+        const resultTag = record.resultLabel
+          ? `<span class="number-label">${escapeHtml(record.resultLabel)}</span>`
+          : "";
+        item.innerHTML = `
+          ${record.title ? `<div class="entry-title">${escapeHtml(record.title)}</div>` : ""}
+          <div class="expr">${formatTapeExpression(record.expr, record.labels)} =</div>
+          <div class="answer">${resultTag}${escapeHtml(record.answer)}</div>
+          ${record.badgeLabel ? `<span class="entry-badge">${escapeHtml(record.badgeLabel)}</span>` : ""}
+          <div class="copied"></div>
+        `;
+        item.addEventListener("click", () => {
+          selectedRecordId = record.id;
+          renderTape();
+          scrollRecordIntoView(record.id);
+          renderActionRow(record);
+          flash("已選擇這筆算式");
+        });
+        tape.append(item);
+      });
+    }
+
+    function formatTapeExpression(value, labels = []) {
+      return annotatedExpressionHtml(value, labels).replace(/([+−×÷])/g, "$1<wbr>");
     }
 
     function escapeHtml(value) {
-      return value.replace(/[&<>"']/g, ch => ({
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -916,11 +1460,17 @@
     }
 
     function hideCopyChoices() {
-      copyRow.classList.add("hidden");
-      copyRow.innerHTML = "";
+      tape.querySelector(".entry.selected")?.classList.remove("selected");
+      renderActionRow(null);
     }
 
-    function showCopyChoices(value, badgeLabel = "") {
+    function showCopyChoices(value, badgeLabel = "", record = null) {
+      const chosenRecord = record || records.find(item => item.id === activeRecordId);
+      renderActionRow(chosenRecord, value, badgeLabel);
+      scrollTapeToBottom();
+    }
+
+    function renderActionRow(record = null, value = null, badgeLabel = "") {
       copyRow.innerHTML = "";
       copyRow.classList.remove("hidden");
       if (badgeLabel) {
@@ -929,16 +1479,34 @@
         badge.textContent = badgeLabel;
         copyRow.append(badge);
       }
-      addCopyButton("複製", compactNumber(value), "single");
-      addShareButton();
-      scrollTapeToBottom();
+      if (record) {
+        addCopyButton(
+          "複製",
+          recordToText(record),
+          "single",
+          Number(record.answer.replaceAll(",", ""))
+        );
+        addShareButton();
+      } else if (value !== null && Number.isFinite(Number(value))) {
+        addCopyButton("複製", compactNumber(Number(value)), "single");
+        addShareButton();
+      } else if (expression || records.length) {
+        addShareButton();
+      }
+      addNoteButton();
     }
 
-    function addCopyButton(label, value, extraClass = "") {
+    function addCopyButton(label, value, extraClass = "", principal = null) {
       const button = document.createElement("button");
       button.className = `copy ${extraClass}`.trim();
       button.textContent = label;
-      button.addEventListener("click", () => copyText(value));
+      button.addEventListener("click", () => {
+        if (principal !== null && Number.isFinite(principal)) {
+          copiedPrincipal = principal;
+          invoicePrincipal = principal;
+        }
+        copyText(value);
+      });
       copyRow.append(button);
     }
 
@@ -946,8 +1514,126 @@
       const button = document.createElement("button");
       button.className = "share-action";
       button.textContent = "截圖";
-      button.addEventListener("click", shareCalculationImage);
+      button.addEventListener("click", openScreenshotOptions);
       copyRow.append(button);
+    }
+
+    function addNoteButton() {
+      const button = document.createElement("button");
+      button.className = "note-action";
+      button.textContent = "＋註記";
+      button.addEventListener("click", openNoteEditor);
+      copyRow.append(button);
+    }
+
+    function openNoteEditor() {
+      const selected = records.find(record => record.id === selectedRecordId);
+      const active = clearOnNextNumber
+        ? records.find(record => record.id === activeRecordId)
+        : null;
+      const record = selected || active || null;
+      const values = record ? numberValues(record.expr) : numberValues(expression);
+      if (!record && (!expression || operators.has(tokenBeforeCursor()) || tokenBeforeCursor() === "(")) {
+        values.push("下一個數字");
+      }
+
+      noteEditingRecordId = record?.id || null;
+      noteFields.innerHTML = "";
+      addCompactNoteField("title", "算式", record?.title || draftTitle, true);
+      const labels = record?.labels || draftLabels;
+      values.forEach((value, index) => {
+        addCompactNoteField(
+          `number:${index}`,
+          value === "下一個數字" ? "下一個" : value,
+          labels[index] || ""
+        );
+      });
+      if (record) addCompactNoteField("result", record.answer, record.resultLabel || "");
+
+      notePanel.hidden = false;
+      const firstEmpty = [...noteFields.querySelectorAll("input")].find(input => !input.value);
+      setTimeout(() => (firstEmpty || noteFields.querySelector("input"))?.focus(), 50);
+    }
+
+    function addCompactNoteField(target, label, value, formulaField = false) {
+      const wrapper = document.createElement("label");
+      wrapper.className = `note-field${formulaField ? " formula-field" : ""}`;
+      const labelElement = document.createElement("span");
+      labelElement.className = "note-field-label";
+      labelElement.textContent = label;
+      const input = document.createElement("input");
+      input.className = "note-field-input";
+      input.maxLength = formulaField ? 16 : 10;
+      input.dataset.noteTarget = target;
+      input.value = value;
+      input.setAttribute("aria-label", `${label}的註記`);
+      wrapper.append(labelElement, input);
+      noteFields.append(wrapper);
+    }
+
+    function closeNoteEditor() {
+      notePanel.hidden = true;
+    }
+
+    function saveNoteEditor() {
+      const record = records.find(item => item.id === noteEditingRecordId);
+      const inputs = [...noteFields.querySelectorAll("[data-note-target]")];
+
+      inputs.forEach(input => {
+        const target = input.dataset.noteTarget;
+        const value = input.value.trim();
+        if (record) {
+          if (target === "title") {
+            record.title = value;
+          } else if (target === "result") {
+            record.resultLabel = value;
+          } else {
+            const index = Number(target.split(":")[1]);
+            record.labels[index] = value;
+          }
+        } else if (target === "title") {
+          draftTitle = value;
+        } else {
+          const index = Number(target.split(":")[1]);
+          draftLabels[index] = value;
+        }
+      });
+
+      if (record) {
+        persistRecords();
+        renderTape();
+        scrollRecordIntoView(record.id);
+        renderActionRow(record);
+      }
+
+      noteEditingRecordId = null;
+      render();
+      flash("註記已儲存");
+    }
+
+    function currentScreenshotRecord() {
+      const active = records.find(record => record.id === activeRecordId);
+      if (clearOnNextNumber && active) return active;
+      if (!expression) return null;
+      return {
+        id: "current",
+        expr: expression,
+        answer: "",
+        badgeLabel: "計算中",
+        title: draftTitle,
+        labels: [...draftLabels],
+        resultLabel: "",
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    function openScreenshotOptions() {
+      const current = currentScreenshotRecord();
+      const selected = records.find(record => record.id === selectedRecordId);
+      screenshotDialog.querySelector('[data-shot-scope="current"]').disabled = !current;
+      screenshotDialog.querySelector('[data-shot-scope="selected"]').disabled = !selected;
+      screenshotDialog.querySelector('[data-shot-scope="all"]').disabled = !records.length;
+      screenshotDialog.showModal();
     }
 
     function drawRoundedRect(context, x, y, width, height, radius) {
@@ -964,25 +1650,47 @@
       context.closePath();
     }
 
-    async function shareCalculationImage() {
-      const formula = clearOnNextNumber && completedExpression
-        ? completedExpression
-        : expression;
-      if (!formula) {
-        flash("請先完成一題計算");
+    function wrapCanvasText(context, text, maxWidth) {
+      const parts = String(text).match(/(?:[+−×÷=]?[^+−×÷=]+)|[+−×÷=]/g) || [String(text)];
+      const lines = [];
+      let line = "";
+      parts.forEach(part => {
+        const test = line + part;
+        if (line && context.measureText(test).width > maxWidth) {
+          lines.push(line);
+          line = part;
+        } else {
+          line = test;
+        }
+      });
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function screenshotFormula(record) {
+      const left = annotatedExpressionText(record.expr, record.labels).replace(/\s+/g, "");
+      if (!record.answer) return `${left}（計算中）`;
+      return `${left}=${record.resultLabel ? `${record.resultLabel}|` : ""}${record.answer}`.replace(/\s+/g, "");
+    }
+
+    async function shareCalculationImage(items) {
+      if (!items.length) {
+        flash("目前沒有可以截圖的算式");
         return;
       }
 
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
-      canvas.height = 630;
+      canvas.height = Math.max(700, 250 + items.reduce((height, record) => {
+        const formulaLength = screenshotFormula(record).length;
+        return height + 145 + Math.ceil(formulaLength / 30) * 64;
+      }, 0));
       const context = canvas.getContext("2d");
-      const badgeLabel = copyRow.querySelector(".result-badge")?.textContent || "";
 
       context.fillStyle = "#e8d9c8";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      drawRoundedRect(context, 55, 55, 1090, 520, 42);
+      drawRoundedRect(context, 55, 55, 1090, canvas.height - 110, 42);
       context.fillStyle = "#f0dfc8";
       context.fill();
       context.lineWidth = 8;
@@ -992,42 +1700,55 @@
       context.fillStyle = "#765f4c";
       context.font = '700 42px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
       context.textAlign = "left";
-      context.fillText("小蘋果計算機", 105, 140);
+      context.fillText("小蘋果計算機", 105, 130);
 
-      if (badgeLabel) {
-        context.font = '700 30px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-        const badgeWidth = context.measureText(badgeLabel).width + 54;
-        drawRoundedRect(context, 1095 - badgeWidth, 95, badgeWidth, 58, 18);
-        context.fillStyle = "#fff9f2";
-        context.fill();
-        context.lineWidth = 4;
-        context.strokeStyle = "#cda06b";
-        context.stroke();
-        context.fillStyle = "#76502f";
-        context.textAlign = "center";
-        context.fillText(badgeLabel, 1095 - badgeWidth / 2, 135);
-      }
+      context.fillStyle = "#9b8066";
+      context.font = '500 24px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+      context.textAlign = "right";
+      context.fillText(new Date().toLocaleString("zh-TW"), 1095, 130);
 
       context.strokeStyle = "#c4a06c";
       context.lineWidth = 3;
       context.beginPath();
-      context.moveTo(105, 185);
-      context.lineTo(1095, 185);
+      context.moveTo(105, 165);
+      context.lineTo(1095, 165);
       context.stroke();
 
-      let fontSize = 80;
-      context.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif`;
-      while (context.measureText(formula).width > 990 && fontSize > 34) {
-        fontSize -= 2;
-        context.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif`;
-      }
-      context.fillStyle = "#3c2815";
-      context.textAlign = "center";
-      context.fillText(formula, 600, 365);
+      let y = 220;
+      items.forEach((record, index) => {
+        if (record.title) {
+          context.fillStyle = "#9a5948";
+          context.font = '800 34px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.textAlign = "left";
+          context.fillText(record.title, 115, y);
+          y += 52;
+        }
 
-      context.fillStyle = "#9b8066";
-      context.font = '500 28px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-      context.fillText("計算結果", 600, 500);
+        context.fillStyle = "#3c2815";
+        context.font = '700 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+        const lines = wrapCanvasText(context, screenshotFormula(record), 950);
+        lines.forEach(line => {
+          context.fillText(line, 115, y);
+          y += 64;
+        });
+
+        if (record.badgeLabel) {
+          context.fillStyle = "#8c6947";
+          context.font = '700 24px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.fillText(record.badgeLabel, 115, y);
+          y += 38;
+        }
+
+        if (index < items.length - 1) {
+          context.strokeStyle = "rgba(128, 102, 78, .28)";
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(115, y + 10);
+          context.lineTo(1085, y + 10);
+          context.stroke();
+          y += 58;
+        }
+      });
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
       if (!blob) {
@@ -1035,12 +1756,13 @@
         return;
       }
 
-      const file = new File([blob], "小蘋果計算結果.png", { type: "image/png" });
+      const shareText = items.map(recordToText).join("\n\n");
+      const file = new File([blob], "小蘋果計算紀錄.png", { type: "image/png" });
       try {
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: "小蘋果計算結果", text: formula });
+          await navigator.share({ files: [file], title: "小蘋果計算紀錄", text: shareText });
         } else if (navigator.share) {
-          await navigator.share({ title: "小蘋果計算結果", text: formula });
+          await navigator.share({ title: "小蘋果計算紀錄", text: shareText });
         } else {
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
@@ -1050,9 +1772,7 @@
           flash("算式圖片已儲存");
         }
       } catch (error) {
-        if (error.name !== "AbortError") {
-          flash("無法分享，請再試一次");
-        }
+        if (error.name !== "AbortError") flash("無法分享，請再試一次");
       }
     }
 
@@ -1065,7 +1785,7 @@
 
       try {
         await navigator.clipboard.writeText(text);
-        flash(`已複製 ${text}`);
+        flash(/[|\n]/.test(text) ? "已複製算式與註記" : `已複製 ${text}`);
       } catch {
         flash("請長按答案手動複製");
       }
@@ -1096,12 +1816,15 @@
       };
     }
 
-    function showCalculatedAmount(value, formula, message, badgeLabel) {
+    function showCalculatedAmount(value, formula, message, badgeLabel, record) {
       lastAnswer = value;
       expression = compactNumber(value);
       completedExpression = formula;
       clearOnNextNumber = true;
-      showCopyChoices(value, badgeLabel);
+      activeRecordId = record?.id || null;
+      selectedRecordId = record?.id || null;
+      renderTape();
+      showCopyChoices(value, badgeLabel, record);
       render();
       flash(message);
     }
@@ -1111,8 +1834,8 @@
       if (!amounts) return;
 
       const formula = `${amounts.principalShown} × 5% = ${amounts.taxShown}`;
-      addTapeEntry(`${amounts.principalShown} × 5%`, amounts.taxShown, "稅金");
-      showCalculatedAmount(amounts.tax, formula, `5%稅金 ${amounts.taxShown}`, "稅金");
+      const record = addTapeEntry(`${amounts.principalShown} × 5%`, amounts.taxShown, "稅金");
+      showCalculatedAmount(amounts.tax, formula, `5%稅金 ${amounts.taxShown}`, "稅金", record);
     }
 
     function calculateInvoice() {
@@ -1120,12 +1843,12 @@
       if (!amounts) return;
 
       const formula = `${amounts.principalShown} + ${amounts.taxShown} = ${amounts.totalShown}`;
-      addTapeEntry(
+      const record = addTapeEntry(
         `${amounts.principalShown} + ${amounts.taxShown}`,
         amounts.totalShown,
         "發票"
       );
-      showCalculatedAmount(amounts.total, formula, `發票總額 ${amounts.totalShown}`, "發票");
+      showCalculatedAmount(amounts.total, formula, `發票總額 ${amounts.totalShown}`, "發票", record);
     }
 
     function useAnswer(mode) {
@@ -1160,6 +1883,37 @@
     document.getElementById("setX").addEventListener("click", useStoredX);
     document.getElementById("clear").addEventListener("click", clearInput);
     document.getElementById("equals").addEventListener("click", calculate);
+
+    noteForm.addEventListener("submit", event => {
+      event.preventDefault();
+      saveNoteEditor();
+      closeNoteEditor();
+    });
+    document.getElementById("cancelNote").addEventListener("click", () => {
+      noteEditingRecordId = null;
+      closeNoteEditor();
+    });
+    document.getElementById("cancelScreenshot").addEventListener("click", () => {
+      screenshotDialog.close();
+    });
+    document.querySelectorAll("[data-shot-scope]").forEach(button => {
+      button.addEventListener("click", async () => {
+        if (button.disabled) return;
+        const scope = button.dataset.shotScope;
+        let items = [];
+        if (scope === "current") {
+          const current = currentScreenshotRecord();
+          if (current) items = [current];
+        } else if (scope === "selected") {
+          const selected = records.find(record => record.id === selectedRecordId);
+          if (selected) items = [selected];
+        } else if (scope === "all") {
+          items = [...records];
+        }
+        screenshotDialog.close();
+        await shareCalculationImage(items);
+      });
+    });
 
     const keypad = document.querySelector(".keypad");
 
@@ -1215,6 +1969,7 @@
     });
 
     document.addEventListener("keydown", event => {
+      if (event.target.matches("input, textarea") || !notePanel.hidden || screenshotDialog.open) return;
       const key = event.key;
       if (/^\d$/.test(key)) appendNumber(key);
       if (key === ".") appendDot();
@@ -1229,6 +1984,8 @@
       if (key === "Escape") clearInput();
     });
 
+    renderTape();
+    renderActionRow(null);
     render();
   </script>
 </body>
