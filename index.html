@@ -40,6 +40,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", "PingFang TC", sans-serif;
       overflow-x: hidden;
       user-select: none;
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -543,7 +544,7 @@
       color: var(--ink);
       background: #fffaf4;
       font: inherit;
-      font-size: 14px;
+      font-size: 16px;
       user-select: text;
     }
 
@@ -1551,8 +1552,6 @@
       if (record) addCompactNoteField("result", record.answer, record.resultLabel || "");
 
       notePanel.hidden = false;
-      const firstEmpty = [...noteFields.querySelectorAll("input")].find(input => !input.value);
-      setTimeout(() => (firstEmpty || noteFields.querySelector("input"))?.focus(), 50);
     }
 
     function addCompactNoteField(target, label, value, formulaField = false) {
