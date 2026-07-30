@@ -1566,6 +1566,12 @@
       input.maxLength = formulaField ? 16 : 10;
       input.dataset.noteTarget = target;
       input.value = value;
+      input.lang = "zh-Hant";
+      input.inputMode = "text";
+      input.autocomplete = "off";
+      input.autocapitalize = "none";
+      input.spellcheck = false;
+      input.setAttribute("autocorrect", "off");
       input.setAttribute("aria-label", `${label}的註記`);
       wrapper.append(labelElement, input);
       noteFields.append(wrapper);
