@@ -491,8 +491,8 @@
     }
 
     .note-panel {
-      width: fit-content;
-      max-width: 100%;
+      width: 100%;
+      max-width: none;
       padding: 6px 8px;
       border: 2px solid var(--line);
       border-radius: 12px;
@@ -912,6 +912,7 @@
     let activeRecordId = records.at(-1)?.id || null;
     let selectedRecordId = null;
     let noteEditingRecordId = null;
+    let noteKeyboardScrollY = null;
 
     function render() {
       const activeRecord = clearOnNextNumber
@@ -1571,7 +1572,15 @@
     }
 
     function closeNoteEditor() {
+      const returnScrollY = noteKeyboardScrollY;
+      if (notePanel.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
       notePanel.hidden = true;
+      noteKeyboardScrollY = null;
+      if (returnScrollY !== null) {
+        setTimeout(() => window.scrollTo(0, returnScrollY), 80);
+      }
     }
 
     function saveNoteEditor() {
@@ -1672,6 +1681,41 @@
       return `${left}=${record.resultLabel ? `${record.resultLabel}|` : ""}${record.answer}`.replace(/\s+/g, "");
     }
 
+    function screenshotLineItems(record) {
+      if (!record.answer || (record.labels || []).filter(Boolean).length < 2) return [];
+
+      const rows = [];
+      const matcher = /\d+(?:\.\d+)?/g;
+      let match;
+      let previousEnd = 0;
+      let index = 0;
+
+      while ((match = matcher.exec(record.expr))) {
+        const between = record.expr.slice(previousEnd, match.index);
+        const operator = (between.match(/[+−×÷]/g) || []).at(-1) || "";
+        const numeric = Number(match[0]);
+        rows.push({
+          label: record.labels[index] || `項目 ${index + 1}`,
+          amount: Number.isFinite(numeric) ? prettyNumber(numeric) : match[0],
+          operator: index === 0 ? "" : operator
+        });
+        previousEnd = match.index + match[0].length;
+        index += 1;
+      }
+
+      return rows;
+    }
+
+    function estimatedScreenshotRecordHeight(record) {
+      const rows = screenshotLineItems(record);
+      const titleHeight = record.title ? 52 : 0;
+      const badgeHeight = record.badgeLabel ? 38 : 0;
+      if (rows.length) {
+        return titleHeight + badgeHeight + rows.length * 58 + 105;
+      }
+      return titleHeight + badgeHeight + Math.ceil(screenshotFormula(record).length / 30) * 64 + 65;
+    }
+
     async function shareCalculationImage(items) {
       if (!items.length) {
         flash("目前沒有可以截圖的算式");
@@ -1680,10 +1724,10 @@
 
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
-      canvas.height = Math.max(700, 250 + items.reduce((height, record) => {
-        const formulaLength = screenshotFormula(record).length;
-        return height + 145 + Math.ceil(formulaLength / 30) * 64;
-      }, 0));
+      canvas.height = Math.max(
+        700,
+        230 + items.reduce((height, record) => height + estimatedScreenshotRecordHeight(record), 0)
+      );
       const context = canvas.getContext("2d");
 
       context.fillStyle = "#e8d9c8";
@@ -1717,19 +1761,77 @@
       items.forEach((record, index) => {
         if (record.title) {
           context.fillStyle = "#9a5948";
-          context.font = '800 34px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.font = '800 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.textAlign = "left";
           context.fillText(record.title, 115, y);
           y += 52;
         }
 
-        context.fillStyle = "#3c2815";
-        context.font = '700 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-        const lines = wrapCanvasText(context, screenshotFormula(record), 950);
-        lines.forEach(line => {
-          context.fillText(line, 115, y);
-          y += 64;
-        });
+        const lineItems = screenshotLineItems(record);
+        if (lineItems.length) {
+          const operatorLabels = { "+": "＋", "−": "－", "×": "×", "÷": "÷" };
+          const labelFont = '500 40px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const amountFont = '700 38px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalLabelFont = '500 40px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalAmountFont = '800 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const minimumGap = 32;
+          const amountRightRequirements = lineItems.map(row => {
+            context.font = labelFont;
+            const labelWidth = context.measureText(row.label).width;
+            context.font = amountFont;
+            const amountWidth = context.measureText(row.amount).width;
+            return 185 + labelWidth + minimumGap + amountWidth;
+          });
+          context.font = totalLabelFont;
+          const totalLabelWidth = context.measureText(record.resultLabel || "合計").width;
+          context.font = totalAmountFont;
+          const totalAmountWidth = context.measureText(record.answer).width;
+          amountRightRequirements.push(185 + totalLabelWidth + minimumGap + totalAmountWidth);
+          const amountColumnX = Math.min(1040, Math.max(420, ...amountRightRequirements));
+
+          lineItems.forEach(row => {
+            context.fillStyle = "#765f4c";
+            context.font = labelFont;
+            context.textAlign = "left";
+            if (row.operator) {
+              context.fillText(operatorLabels[row.operator] || row.operator, 135, y);
+            }
+            context.fillText(row.label, 185, y);
+
+            context.fillStyle = "#3c2815";
+            context.font = amountFont;
+            context.textAlign = "right";
+            context.fillText(row.amount, amountColumnX, y);
+            y += 58;
+          });
+
+          context.strokeStyle = "rgba(128, 102, 78, .4)";
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(135, y - 18);
+          context.lineTo(amountColumnX + 20, y - 18);
+          context.stroke();
+
+          context.fillStyle = "#76502f";
+          context.font = totalLabelFont;
+          context.textAlign = "left";
+          context.fillText(record.resultLabel || "合計", 185, y + 30);
+
+          context.fillStyle = "#3c2815";
+          context.font = totalAmountFont;
+          context.textAlign = "right";
+          context.fillText(record.answer, amountColumnX, y + 30);
+          y += 85;
+        } else {
+          context.fillStyle = "#3c2815";
+          context.font = '700 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.textAlign = "left";
+          const lines = wrapCanvasText(context, screenshotFormula(record), 950);
+          lines.forEach(line => {
+            context.fillText(line, 115, y);
+            y += 64;
+          });
+        }
 
         if (record.badgeLabel) {
           context.fillStyle = "#8c6947";
@@ -1759,7 +1861,7 @@
       const file = new File([blob], "小蘋果計算紀錄.png", { type: "image/png" });
       try {
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: "小蘋果計算紀錄", text: shareText });
+          await navigator.share({ files: [file], title: "小蘋果計算紀錄" });
         } else if (navigator.share) {
           await navigator.share({ title: "小蘋果計算紀錄", text: shareText });
         } else {
@@ -1882,6 +1984,32 @@
     document.getElementById("setX").addEventListener("click", useStoredX);
     document.getElementById("clear").addEventListener("click", clearInput);
     document.getElementById("equals").addEventListener("click", calculate);
+
+    function restoreNoteKeyboardScroll() {
+      if (noteKeyboardScrollY === null || !notePanel.contains(document.activeElement)) return;
+      window.scrollTo(0, noteKeyboardScrollY);
+    }
+
+    notePanel.addEventListener("pointerdown", event => {
+      if (event.target.matches(".note-field-input")) {
+        noteKeyboardScrollY = window.scrollY;
+      }
+    });
+    notePanel.addEventListener("focusin", event => {
+      if (!event.target.matches(".note-field-input")) return;
+      if (noteKeyboardScrollY === null) noteKeyboardScrollY = window.scrollY;
+      requestAnimationFrame(restoreNoteKeyboardScroll);
+      setTimeout(restoreNoteKeyboardScroll, 160);
+      setTimeout(restoreNoteKeyboardScroll, 360);
+    });
+    notePanel.addEventListener("focusout", () => {
+      setTimeout(() => {
+        if (!notePanel.contains(document.activeElement)) noteKeyboardScrollY = null;
+      }, 0);
+    });
+    window.visualViewport?.addEventListener("resize", () => {
+      requestAnimationFrame(restoreNoteKeyboardScroll);
+    });
 
     noteForm.addEventListener("submit", event => {
       event.preventDefault();
