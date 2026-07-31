@@ -5,25 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="小蘋果計算機">
-  <meta name="theme-color" content="#ead9c4">
+  <meta name="theme-color" content="#F6E8D2">
   <link rel="apple-touch-icon" href="app-icon.png?v=2">
   <link rel="icon" type="image/png" href="app-icon.png?v=2">
   <title>小蘋果計算機 v2</title>
   <style>
     :root {
-      --bg: #fbf6ef;
-      --panel: #e8d9c8;
-      --panel-soft: #f0dfc8;
-      --line: #c4a06c;
-      --ink: #3c2815;
-      --muted: #9b8066;
-      --cream: #fff9f2;
+      --bg: #F6E8D2;
+      --panel: #F6E8D2;
+      --panel-soft: #FFFDF8;
+      --line: #D9876C;
+      --ink: #3F403C;
+      --muted: #686862;
+      --number: #FAF4E8;
+      --operator: #D9876C;
+      --function: #D8AA43;
+      --warning: #82AAA1;
+      --complete: #486B7B;
+      --selected: #C8DCD6;
+      --selected-accent: #5F8C83;
+      --cream: var(--number);
       --gold: #cda06b;
-      --green: #a8b99d;
+      --green: var(--function);
       --green-dark: #28442c;
-      --red: #b95243;
-      --orange: #be735c;
-      --brown: #8c5d35;
+      --red: var(--warning);
+      --orange: var(--operator);
+      --brown: var(--complete);
     }
 
     * {
@@ -122,37 +129,48 @@
     }
 
     .entry {
-      border-bottom: 1px solid rgba(128, 102, 78, .18);
-      padding: 2px 0 5px;
+      border-bottom: 1px solid var(--operator);
+      padding: 7px 0 8px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto auto;
       align-items: start;
       column-gap: 8px;
       width: 100%;
-      border-radius: 10px;
+      border-radius: 0;
       cursor: pointer;
       transition: background .16s ease, padding .16s ease;
       scroll-snap-align: start;
     }
 
     .entry.selected {
-      padding-inline: 8px;
-      background: rgba(205, 160, 107, .16);
+      padding-left: 10px;
+      padding-right: 8px;
+      background: var(--selected);
+      box-shadow: inset 4px 0 0 var(--selected-accent);
+    }
+
+    .entry.selected .expr {
+      color: #4A4D49;
+    }
+
+    .entry.selected .entry-title,
+    .entry.selected .answer {
+      color: #303531;
     }
 
     .entry-title {
       grid-column: 1 / -1;
-      color: #8c5d35;
-      font-size: 15px;
-      font-weight: 800;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 650;
       line-height: 1.35;
       margin-bottom: 2px;
     }
 
     .entry .expr {
-      color: #6f543e;
+      color: #68625B;
       font-size: 17px;
-      font-weight: 600;
+      font-weight: 400;
       line-height: 1.25;
       text-align: left;
       min-width: 0;
@@ -165,8 +183,8 @@
 
     .entry .answer {
       color: var(--ink);
-      font-size: 21px;
-      font-weight: 800;
+      font-size: 19px;
+      font-weight: 650;
       line-height: 1.25;
       white-space: nowrap;
     }
@@ -212,7 +230,7 @@
 
     .divider {
       height: 2px;
-      background: #bfa06b;
+      background: var(--operator);
       flex: 0 0 auto;
       opacity: .9;
     }
@@ -227,7 +245,7 @@
       padding-bottom: 8px;
       color: var(--ink);
       font-size: clamp(31px, 7svh, 49px);
-      font-weight: 700;
+      font-weight: 500;
       line-height: 1.05;
       text-align: right;
       white-space: nowrap;
@@ -249,11 +267,17 @@
       white-space: nowrap;
     }
 
+    .display-answer {
+      color: var(--ink);
+      font-size: 1.12em;
+      font-weight: 750;
+    }
+
     .draft-title {
       min-height: 22px;
-      color: #8c5d35;
-      font-size: 15px;
-      font-weight: 800;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 650;
       text-align: right;
       padding-top: 4px;
     }
@@ -358,8 +382,8 @@
     .set-x,
     .copy,
     .share-action {
-      background: var(--gold);
-      color: #fff;
+      background: var(--function);
+      color: var(--ink);
       font-size: clamp(22px, 3.1svh, 27px);
       white-space: nowrap;
     }
@@ -371,8 +395,8 @@
     }
 
     .set-x {
-      background: #8f9f91;
-      color: #fff9f2;
+      background: var(--function);
+      color: var(--ink);
       font-weight: 900;
     }
 
@@ -387,8 +411,8 @@
     }
 
     .share-action {
-      background: var(--green);
-      color: var(--green-dark);
+      background: var(--function);
+      color: var(--ink);
       font-size: clamp(16px, 2.1svh, 19px);
       font-weight: 700;
     }
@@ -401,8 +425,8 @@
     }
 
     .note-action {
-      background: #c78370;
-      color: #fff;
+      background: var(--function);
+      color: var(--ink);
       font-size: clamp(16px, 2.1svh, 19px);
       font-weight: 800;
     }
@@ -426,8 +450,8 @@
 
     .backspace,
     .paren {
-      background: var(--green);
-      color: var(--green-dark);
+      background: var(--function);
+      color: var(--ink);
     }
 
     .backspace {
@@ -435,13 +459,13 @@
     }
 
     .invoice {
-      background: #d8c5ac;
+      background: var(--function);
       color: var(--ink);
       font-size: clamp(17px, 2.3svh, 21px);
     }
 
     .tax {
-      background: #c8b994;
+      background: var(--function);
       color: var(--ink);
       font-size: clamp(17px, 2.3svh, 21px);
     }
@@ -467,17 +491,17 @@
     }
 
     .clear {
-      background: var(--red);
-      color: #fff;
+      background: var(--warning);
+      color: var(--ink);
     }
 
     .op {
-      background: var(--orange);
+      background: var(--operator);
       color: #fff;
     }
 
     .equals {
-      background: var(--brown);
+      background: var(--complete);
       color: #fff;
     }
 
@@ -993,7 +1017,7 @@
       const resultTag = record.resultLabel
         ? `<span class="inline-number-label">${escapeHtml(record.resultLabel)}</span>`
         : "";
-      return `${expressionHtml} = ${resultTag}${escapeHtml(record.answer)}`;
+      return `<span class="display-expression">${expressionHtml} = </span><span class="display-answer">${resultTag}${escapeHtml(record.answer)}</span>`;
     }
 
     function annotatedExpressionText(value, labels = []) {
@@ -1714,12 +1738,50 @@
 
     function estimatedScreenshotRecordHeight(record) {
       const rows = screenshotLineItems(record);
-      const titleHeight = record.title ? 52 : 0;
-      const badgeHeight = record.badgeLabel ? 38 : 0;
+      const titleHeight = record.title ? 66 : 0;
+      const badgeHeight = record.badgeLabel ? 44 : 0;
       if (rows.length) {
-        return titleHeight + badgeHeight + rows.length * 58 + 105;
+        return titleHeight + badgeHeight + rows.length * 68 + 125;
       }
-      return titleHeight + badgeHeight + Math.ceil(screenshotFormula(record).length / 30) * 64 + 65;
+      return titleHeight + badgeHeight + Math.ceil(screenshotFormula(record).length / 30) * 72 + 80;
+    }
+
+    function estimatedScreenshotWidth(items) {
+      const measureCanvas = document.createElement("canvas");
+      const measureContext = measureCanvas.getContext("2d");
+      let contentRight = 0;
+
+      items.forEach(record => {
+        if (record.title) {
+          measureContext.font = '800 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          contentRight = Math.max(contentRight, 115 + measureContext.measureText(record.title).width);
+        }
+
+        const rows = screenshotLineItems(record);
+        if (rows.length) {
+          rows.forEach(row => {
+            measureContext.font = '500 46px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+            const labelWidth = measureContext.measureText(row.label).width;
+            measureContext.font = '700 46px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+            const amountWidth = measureContext.measureText(row.amount).width;
+            contentRight = Math.max(contentRight, 185 + labelWidth + 38 + amountWidth);
+          });
+
+          measureContext.font = '500 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalLabelWidth = measureContext.measureText(record.resultLabel || "合計").width;
+          measureContext.font = '800 58px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalAmountWidth = measureContext.measureText(record.answer).width;
+          contentRight = Math.max(contentRight, 185 + totalLabelWidth + 38 + totalAmountWidth);
+        } else {
+          measureContext.font = '700 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          contentRight = Math.max(
+            contentRight,
+            115 + Math.min(950, measureContext.measureText(screenshotFormula(record)).width)
+          );
+        }
+      });
+
+      return Math.min(1200, Math.max(650, Math.ceil(contentRight + 115)));
     }
 
     async function shareCalculationImage(items) {
@@ -1729,58 +1791,50 @@
       }
 
       const canvas = document.createElement("canvas");
-      canvas.width = 1200;
+      canvas.width = estimatedScreenshotWidth(items);
       canvas.height = Math.max(
-        700,
-        230 + items.reduce((height, record) => height + estimatedScreenshotRecordHeight(record), 0)
+        340,
+        150
+          + items.reduce((height, record) => height + estimatedScreenshotRecordHeight(record), 0)
+          + Math.max(0, items.length - 1) * 42
       );
       const context = canvas.getContext("2d");
 
-      context.fillStyle = "#e8d9c8";
+      context.fillStyle = "#F3DED3";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      drawRoundedRect(context, 55, 55, 1090, canvas.height - 110, 42);
-      context.fillStyle = "#f0dfc8";
+      drawRoundedRect(context, 35, 35, canvas.width - 70, canvas.height - 70, 42);
+      context.fillStyle = "#FFF9F4";
       context.fill();
       context.lineWidth = 8;
-      context.strokeStyle = "#c4a06c";
+      context.strokeStyle = "#D9876C";
       context.stroke();
 
-      context.fillStyle = "#765f4c";
-      context.font = '700 42px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-      context.textAlign = "left";
-      context.fillText("小蘋果計算機", 105, 130);
-
-      context.fillStyle = "#9b8066";
-      context.font = '500 24px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-      context.textAlign = "right";
-      context.fillText(new Date().toLocaleString("zh-TW"), 1095, 130);
-
-      context.strokeStyle = "#c4a06c";
+      drawRoundedRect(context, 50, 50, canvas.width - 100, canvas.height - 100, 32);
       context.lineWidth = 3;
-      context.beginPath();
-      context.moveTo(105, 165);
-      context.lineTo(1095, 165);
+      context.strokeStyle = "#E9C7B8";
       context.stroke();
 
-      let y = 220;
+      // 讓標題、明細與合計整組在內框中垂直置中，
+      // 避免內容過度貼近上緣而產生懸吊感。
+      let y = 138;
       items.forEach((record, index) => {
         if (record.title) {
-          context.fillStyle = "#9a5948";
-          context.font = '800 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.fillStyle = "#87503F";
+          context.font = '800 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.textAlign = "left";
           context.fillText(record.title, 115, y);
-          y += 52;
+          y += 64;
         }
 
         const lineItems = screenshotLineItems(record);
         if (lineItems.length) {
           const operatorLabels = { "+": "＋", "−": "－", "×": "×", "÷": "÷" };
-          const labelFont = '500 40px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-          const amountFont = '700 38px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-          const totalLabelFont = '500 40px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-          const totalAmountFont = '800 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
-          const minimumGap = 32;
+          const labelFont = '500 46px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const amountFont = '700 46px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalLabelFont = '500 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const totalAmountFont = '800 58px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          const minimumGap = 38;
           const amountRightRequirements = lineItems.map(row => {
             context.font = labelFont;
             const labelWidth = context.measureText(row.label).width;
@@ -1793,10 +1847,10 @@
           context.font = totalAmountFont;
           const totalAmountWidth = context.measureText(record.answer).width;
           amountRightRequirements.push(185 + totalLabelWidth + minimumGap + totalAmountWidth);
-          const amountColumnX = Math.min(1040, Math.max(420, ...amountRightRequirements));
+          const amountColumnX = Math.min(canvas.width - 115, Math.max(420, ...amountRightRequirements));
 
           lineItems.forEach(row => {
-            context.fillStyle = "#765f4c";
+            context.fillStyle = "#4B4541";
             context.font = labelFont;
             context.textAlign = "left";
             if (row.operator) {
@@ -1804,54 +1858,54 @@
             }
             context.fillText(row.label, 185, y);
 
-            context.fillStyle = "#3c2815";
+            context.fillStyle = "#302E2B";
             context.font = amountFont;
             context.textAlign = "right";
             context.fillText(row.amount, amountColumnX, y);
-            y += 58;
+            y += 68;
           });
 
-          context.strokeStyle = "rgba(128, 102, 78, .4)";
-          context.lineWidth = 2;
+          context.strokeStyle = "#D8AA43";
+          context.lineWidth = 3;
           context.beginPath();
-          context.moveTo(135, y - 18);
-          context.lineTo(amountColumnX + 20, y - 18);
+          context.moveTo(135, y - 22);
+          context.lineTo(amountColumnX + 24, y - 22);
           context.stroke();
 
-          context.fillStyle = "#76502f";
+          context.fillStyle = "#87503F";
           context.font = totalLabelFont;
           context.textAlign = "left";
-          context.fillText(record.resultLabel || "合計", 185, y + 30);
+          context.fillText(record.resultLabel || "合計", 185, y + 38);
 
-          context.fillStyle = "#3c2815";
+          context.fillStyle = "#302E2B";
           context.font = totalAmountFont;
           context.textAlign = "right";
-          context.fillText(record.answer, amountColumnX, y + 30);
-          y += 85;
+          context.fillText(record.answer, amountColumnX, y + 38);
+          y += 100;
         } else {
-          context.fillStyle = "#3c2815";
-          context.font = '700 48px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.fillStyle = "#302E2B";
+          context.font = '700 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.textAlign = "left";
-          const lines = wrapCanvasText(context, screenshotFormula(record), 950);
+          const lines = wrapCanvasText(context, screenshotFormula(record), canvas.width - 230);
           lines.forEach(line => {
             context.fillText(line, 115, y);
-            y += 64;
+            y += 72;
           });
         }
 
         if (record.badgeLabel) {
-          context.fillStyle = "#8c6947";
-          context.font = '700 24px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
+          context.fillStyle = "#87503F";
+          context.font = '700 28px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.fillText(record.badgeLabel, 115, y);
-          y += 38;
+          y += 44;
         }
 
         if (index < items.length - 1) {
-          context.strokeStyle = "rgba(128, 102, 78, .28)";
+          context.strokeStyle = "#E9C7B8";
           context.lineWidth = 2;
           context.beginPath();
           context.moveTo(115, y + 10);
-          context.lineTo(1085, y + 10);
+          context.lineTo(canvas.width - 115, y + 10);
           context.stroke();
           y += 58;
         }
