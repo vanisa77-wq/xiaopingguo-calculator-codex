@@ -521,6 +521,7 @@
       border: 2px solid var(--line);
       border-radius: 12px;
       background: var(--panel-soft);
+      overflow: hidden;
     }
 
     .note-panel[hidden] {
@@ -536,6 +537,7 @@
       display: grid;
       grid-template-columns: repeat(3, max-content);
       gap: 5px 8px;
+      width: 100%;
     }
 
     .note-field {
@@ -778,6 +780,31 @@
       }
     }
 
+    @media (max-width: 480px) {
+      .note-fields {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .note-field,
+      .note-field.formula-field {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        gap: 3px;
+      }
+
+      .note-field-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .note-field-input {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
     @media (max-height: 780px) {
       .calculator {
         padding-top: 24px;
@@ -805,7 +832,7 @@
 
     @media (max-width: 340px) {
       .note-fields {
-        grid-template-columns: repeat(2, max-content);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .note-field.formula-field {
