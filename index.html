@@ -65,7 +65,7 @@
       box-shadow: none;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
 
     header {
@@ -91,7 +91,7 @@
     }
 
     .screen {
-      height: clamp(400px, 48svh, 470px);
+      height: clamp(340px, 40svh, 420px);
       border: 3px solid var(--line);
       border-radius: 26px;
       background: var(--panel-soft);
@@ -340,7 +340,7 @@
     .keypad {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      gap: 9px;
     }
 
     .memory-row {
@@ -472,11 +472,11 @@
     }
 
     .exchange-row button {
-      height: clamp(52px, 6svh, 58px);
-      border-radius: 16px;
+      height: clamp(40px, 4.6svh, 46px);
+      border-radius: 14px;
       background: var(--complete);
       color: #fff;
-      font-size: clamp(16px, 2.4svh, 20px);
+      font-size: clamp(14px, 2svh, 17px);
       font-weight: 800;
     }
 
@@ -825,7 +825,7 @@
       .calculator {
         padding-top: 24px;
         padding-bottom: 22px;
-        gap: 12px;
+        gap: 8px;
       }
 
       .screen {
@@ -833,16 +833,21 @@
       }
 
       button {
-        height: 56px;
+        height: 52px;
       }
 
       .memory-row button,
       .utility-row button {
-        height: 50px;
+        height: 46px;
+      }
+
+      .exchange-row button {
+        height: 38px;
+        font-size: 14px;
       }
 
       .screen {
-        height: 340px;
+        height: 300px;
       }
     }
 
