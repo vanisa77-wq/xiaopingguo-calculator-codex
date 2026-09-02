@@ -900,7 +900,7 @@
 
     <section class="keypad" aria-label="計算機按鍵">
       <div class="memory-row">
-        <button class="ans" data-ans="round0">ANS 0</button>
+        <button class="ans" data-ans="floor">ANS ↓</button>
         <button class="ans" data-ans="round2">ANS .00</button>
         <button class="ans" data-ans="ceil">ANS ↑</button>
         <button class="set-x" id="setX">設<span class="x-mark">𝒳</span></button>
@@ -1373,13 +1373,13 @@
 
     function answerVersions(value) {
       return {
-        round0Label: String(Math.round(value)),
+        floorLabel: String(Math.floor(value)),
         round2Label: Number(value.toFixed(2)).toLocaleString("en-US", {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2
         }),
         ceilLabel: String(Math.ceil(value)),
-        round0Value: String(Math.round(value)),
+        floorValue: String(Math.floor(value)),
         round2Value: String(Number(value.toFixed(2))),
         ceilValue: String(Math.ceil(value))
       };
@@ -1974,7 +1974,7 @@
       const file = new File([blob], "小蘋果計算紀錄.png", { type: "image/png" });
       try {
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: "小蘋果計算紀錄" });
+          await navigator.share({ files: [file] });
         } else if (navigator.share) {
           await navigator.share({ title: "小蘋果計算紀錄", text: shareText });
         } else {
@@ -2158,7 +2158,7 @@
         return;
       }
       const versions = answerVersions(lastAnswer);
-      expression = mode === "round2" ? versions.round2Value : mode === "round0" ? versions.round0Value : versions.ceilValue;
+      expression = mode === "round2" ? versions.round2Value : mode === "floor" ? versions.floorValue : versions.ceilValue;
       clearOnNextNumber = false;
       showCopyChoices(Number(expression));
       render();
