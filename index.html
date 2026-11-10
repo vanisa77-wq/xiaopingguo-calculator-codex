@@ -2065,20 +2065,20 @@
       showCalculatedAmount(amounts.total, formula, `發票總額 ${amounts.totalShown}`, "發票", record);
     }
 
-    const exchangeRateStorageKey = "littleAppleExchangeRateTWDJPYV1";
+    const exchangeRateStorageKey = "littleAppleExchangeRateTWDJPYV2";
     const exchangeRateMaxAgeMs = 6 * 60 * 60 * 1000;
 
     function loadCachedExchangeRate() {
       try {
         const cached = JSON.parse(localStorage.getItem(exchangeRateStorageKey) || "null");
-        if (cached && Number.isFinite(cached.rate) && cached.fetchedAt) return cached;
+        if (cached && Number.isFinite(cached.rate) && cached.fetchedAt && Number.isFinite(cached.rateTime)) return cached;
       } catch {}
       return null;
     }
 
-    function saveCachedExchangeRate(rate) {
+    function saveCachedExchangeRate(info) {
       try {
-        localStorage.setItem(exchangeRateStorageKey, JSON.stringify({ rate, fetchedAt: Date.now() }));
+        localStorage.setItem(exchangeRateStorageKey, JSON.stringify(info));
       } catch {}
     }
 
@@ -2092,8 +2092,11 @@
         const data = await response.json();
         const rate = Number(data?.rates?.JPY);
         if (data?.result !== "success" || !Number.isFinite(rate)) throw new Error("匯率格式錯誤");
-        saveCachedExchangeRate(rate);
-        return { rate, fetchedAt: Date.now() };
+        const updateUnix = Number(data?.time_last_update_unix);
+        const rateTime = Number.isFinite(updateUnix) && updateUnix > 0 ? updateUnix * 1000 : Date.now();
+        const info = { rate, fetchedAt: Date.now(), rateTime };
+        saveCachedExchangeRate(info);
+        return info;
       } catch (error) {
         if (cached) {
           flash("無法連線，改用上次匯率");
@@ -2139,14 +2142,13 @@
       const resultShown = prettyNumber(result);
       const formula = `${amountShown} ${fromLabel} × ${rateShown} = ${resultShown} ${toLabel}`;
       const record = addTapeEntry(`${amountShown} ${fromLabel}`, `${resultShown} ${toLabel}`, badgeLabel);
-      const updatedAt = new Date(rateInfo.fetchedAt).toLocaleTimeString("zh-Hant", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
+      const rateDate = new Date(rateInfo.rateTime);
+      const pad2 = n => String(n).padStart(2, "0");
+      const rateTimeShown = `${rateDate.getMonth() + 1}/${rateDate.getDate()} ${pad2(rateDate.getHours())}:${pad2(rateDate.getMinutes())}`;
       showCalculatedAmount(
         result,
         formula,
-        `匯率 1 ${fromLabel} ≈ ${rateShown} ${toLabel}（${updatedAt} 更新）`,
+        `匯率 1 ${fromLabel} ≈ ${rateShown} ${toLabel}（${rateTimeShown} 匯率）`,
         badgeLabel,
         record
       );
