@@ -1718,13 +1718,14 @@
       };
     }
 
-    function openScreenshotOptions() {
+    // 按「截圖」直接截目前算式，不再跳出選擇視窗
+    async function openScreenshotOptions() {
       const current = currentScreenshotRecord();
-      const selected = records.find(record => record.id === selectedRecordId);
-      screenshotDialog.querySelector('[data-shot-scope="current"]').disabled = !current;
-      screenshotDialog.querySelector('[data-shot-scope="selected"]').disabled = !selected;
-      screenshotDialog.querySelector('[data-shot-scope="all"]').disabled = !records.length;
-      screenshotDialog.showModal();
+      if (!current) {
+        flash("目前沒有算式可截圖");
+        return;
+      }
+      await shareCalculationImage([current]);
     }
 
     function drawRoundedRect(context, x, y, width, height, radius) {
