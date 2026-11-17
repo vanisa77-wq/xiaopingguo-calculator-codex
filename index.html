@@ -718,6 +718,20 @@
       color: #fff;
     }
 
+    .shot-preview {
+      margin-top: 14px;
+      max-height: 60vh;
+      overflow: auto;
+      border-radius: 14px;
+      background: #d9876c;
+    }
+
+    .shot-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
     .scope-list {
       display: grid;
       gap: 10px;
@@ -945,15 +959,13 @@
 
   <dialog id="screenshotDialog">
     <div class="dialog-body">
-      <h2>選擇截圖內容</h2>
-      <p class="dialog-help">註記、數字標籤與計算時間會一起保留。</p>
-      <div class="scope-list">
-        <button class="scope-button" type="button" data-shot-scope="current">目前算式</button>
-        <button class="scope-button" type="button" data-shot-scope="selected">選擇的歷史算式</button>
-        <button class="scope-button" type="button" data-shot-scope="all">全部計算紀錄</button>
+      <h2>截圖預覽</h2>
+      <div class="shot-preview">
+        <img id="screenshotPreview" alt="截圖預覽">
       </div>
       <div class="dialog-actions">
         <button class="dialog-cancel" type="button" id="cancelScreenshot">取消</button>
+        <button class="dialog-save" type="button" id="confirmScreenshot">分享</button>
       </div>
     </div>
   </dialog>
@@ -1854,19 +1866,19 @@
       );
       const context = canvas.getContext("2d");
 
-      context.fillStyle = "#F3DED3";
+      context.fillStyle = "#D9876C";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
       drawRoundedRect(context, 35, 35, canvas.width - 70, canvas.height - 70, 42);
-      context.fillStyle = "#FFF9F4";
+      context.fillStyle = "#FFFFFF";
       context.fill();
-      context.lineWidth = 8;
-      context.strokeStyle = "#D9876C";
+      context.lineWidth = 5;
+      context.strokeStyle = "#FFFFFF";
       context.stroke();
 
       drawRoundedRect(context, 50, 50, canvas.width - 100, canvas.height - 100, 32);
       context.lineWidth = 3;
-      context.strokeStyle = "#E9C7B8";
+      context.strokeStyle = "#F3D6CB";
       context.stroke();
 
       // 讓標題、明細與合計整組在內框中垂直置中，
@@ -1874,7 +1886,7 @@
       let y = 138;
       items.forEach((record, index) => {
         if (record.title) {
-          context.fillStyle = "#87503F";
+          context.fillStyle = "#C46B4E";
           context.font = '800 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.textAlign = "left";
           context.fillText(record.title, 115, y);
@@ -1904,7 +1916,7 @@
           const amountColumnX = Math.min(canvas.width - 115, Math.max(420, ...amountRightRequirements));
 
           lineItems.forEach(row => {
-            context.fillStyle = "#4B4541";
+            context.fillStyle = "#686862";
             context.font = labelFont;
             context.textAlign = "left";
             if (row.operator) {
@@ -1912,32 +1924,32 @@
             }
             context.fillText(row.label, 185, y);
 
-            context.fillStyle = "#302E2B";
+            context.fillStyle = "#3F403C";
             context.font = amountFont;
             context.textAlign = "right";
             context.fillText(row.amount, amountColumnX, y);
             y += 68;
           });
 
-          context.strokeStyle = "#D8AA43";
+          context.strokeStyle = "#D9876C";
           context.lineWidth = 3;
           context.beginPath();
           context.moveTo(135, y - 22);
           context.lineTo(amountColumnX + 24, y - 22);
           context.stroke();
 
-          context.fillStyle = "#87503F";
+          context.fillStyle = "#C46B4E";
           context.font = totalLabelFont;
           context.textAlign = "left";
           context.fillText(record.resultLabel || "合計", 185, y + 38);
 
-          context.fillStyle = "#302E2B";
+          context.fillStyle = "#3F403C";
           context.font = totalAmountFont;
           context.textAlign = "right";
           context.fillText(record.answer, amountColumnX, y + 38);
           y += 100;
         } else {
-          context.fillStyle = "#302E2B";
+          context.fillStyle = "#3F403C";
           context.font = '700 54px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.textAlign = "left";
           const lines = wrapCanvasText(context, screenshotFormula(record), canvas.width - 230);
@@ -1948,14 +1960,14 @@
         }
 
         if (record.badgeLabel) {
-          context.fillStyle = "#87503F";
+          context.fillStyle = "#C46B4E";
           context.font = '700 28px -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif';
           context.fillText(record.badgeLabel, 115, y);
           y += 44;
         }
 
         if (index < items.length - 1) {
-          context.strokeStyle = "#E9C7B8";
+          context.strokeStyle = "#F3D6CB";
           context.lineWidth = 2;
           context.beginPath();
           context.moveTo(115, y + 10);
@@ -1971,7 +1983,27 @@
         return;
       }
 
-      const shareText = items.map(recordToText).join("\n\n");
+      // 先顯示預覽，使用者按「分享」才真的送出
+      if (pendingShot) URL.revokeObjectURL(pendingShot.url);
+      pendingShot = {
+        blob,
+        url: URL.createObjectURL(blob),
+        text: items.map(recordToText).join("\n\n")
+      };
+      document.getElementById("screenshotPreview").src = pendingShot.url;
+      screenshotDialog.showModal();
+    }
+
+    let pendingShot = null;
+
+    function closeScreenshotPreview() {
+      screenshotDialog.close();
+    }
+
+    async function sharePendingShot() {
+      if (!pendingShot) return;
+      const { blob, text: shareText } = pendingShot;
+      closeScreenshotPreview();
       const file = new File([blob], "小蘋果計算紀錄.png", { type: "image/png" });
       try {
         if (navigator.canShare?.({ files: [file] })) {
@@ -2225,27 +2257,8 @@
       noteEditingRecordId = null;
       closeNoteEditor();
     });
-    document.getElementById("cancelScreenshot").addEventListener("click", () => {
-      screenshotDialog.close();
-    });
-    document.querySelectorAll("[data-shot-scope]").forEach(button => {
-      button.addEventListener("click", async () => {
-        if (button.disabled) return;
-        const scope = button.dataset.shotScope;
-        let items = [];
-        if (scope === "current") {
-          const current = currentScreenshotRecord();
-          if (current) items = [current];
-        } else if (scope === "selected") {
-          const selected = records.find(record => record.id === selectedRecordId);
-          if (selected) items = [selected];
-        } else if (scope === "all") {
-          items = [...records];
-        }
-        screenshotDialog.close();
-        await shareCalculationImage(items);
-      });
-    });
+    document.getElementById("cancelScreenshot").addEventListener("click", closeScreenshotPreview);
+    document.getElementById("confirmScreenshot").addEventListener("click", sharePendingShot);
 
     const keypad = document.querySelector(".keypad");
 
